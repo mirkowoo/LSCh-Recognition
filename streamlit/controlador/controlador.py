@@ -13,5 +13,5 @@ class Controlador:
         return self.modelo.updateFrame()
     
     def iniciarAplicacion(self):
-        from vista.vista import mostrarInterfaz
-        mostrarInterfaz(self)
+        from vista.home import mostrarPaginaPrincipal
+        mostrarPaginaPrincipal(self)
