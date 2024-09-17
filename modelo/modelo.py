@@ -8,9 +8,9 @@ from PIL import Image
 
 class Modelo:
 
-    def __init__(self):
+    def __init__(self,cameraIndex):
         self.counter = 0
-        self.cap = cv.VideoCapture(0)
+        self.cap = cv.VideoCapture(cameraIndex)
         device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = YOLO("best.pt").to(device)
         print(device)

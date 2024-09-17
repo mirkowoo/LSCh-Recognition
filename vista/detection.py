@@ -1,23 +1,48 @@
 import streamlit as st
 from controlador.controlador import Controlador
 from PIL import Image
+import cv2 as cv
 
 def mostrarPaginaDetection():
     
-    controlador = Controlador()
+    def listCameras():
+        index = 0
+        arr = []
+        while True:
+            cap = cv.VideoCapture(index)
+            if not cap.read()[0]:
+                break
+            else:
+                arr.append(index)
+            cap.release()
+            index += 1
+        return arr
+    
+    st.markdown("""
+        <script src="controlador/cameraPermission.js"></script>
+        <button onclick="requestCameraPermission()">Solicitar permiso para la cámara</button>
+        <p id="camera-status"></p>
+    """, unsafe_allow_html=True)
+
+    cameras = listCameras()
+
+    if not cameras:
+        st.error("No se encontraron cámaras disponibles.")
+    else:
+        cameraIndex = st.selectbox("Selecciona la cámara",cameras)
+
+    controlador = Controlador(cameraIndex)
+
+    
 
     letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
     st.title("Detección en tiempo real")
 
     col1,col2,col3 = st.columns([1,2,1])
-
-
     
     with col2:
         stframe = st.empty()
-        
-        
 
         left,center,right = st.columns([1,2,1])
         with left:
@@ -31,15 +56,6 @@ def mostrarPaginaDetection():
             st.button("Modo automático",key="goAuto")
         with right:
             st.button("⟶",key="goRight")
-    
-    
-    
-
-    
-
-    
-
-    
 
     while True:
         frame, detectedClass, detectedAccuracy = controlador.updateFrameC()
