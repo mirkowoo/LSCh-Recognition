@@ -2,6 +2,7 @@ import streamlit as st
 from controlador.controlador import Controlador
 from PIL import Image
 import cv2 as cv
+from functools import partial
 
 def mostrarPaginaDetection():
     
@@ -18,13 +19,9 @@ def mostrarPaginaDetection():
             index += 1
         return arr
     
-    st.markdown("""
-        <script src="controlador/cameraPermission.js"></script>
-        <button onclick="requestCameraPermission()">Solicitar permiso para la cámara</button>
-        <p id="camera-status"></p>
-    """, unsafe_allow_html=True)
-
     cameras = listCameras()
+
+    picture = st.camera_input("Tomar una foto")
 
     if not cameras:
         st.error("No se encontraron cámaras disponibles.")
@@ -34,26 +31,47 @@ def mostrarPaginaDetection():
         controlador = Controlador(cameraIndex)
 
     letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+    
+    if 'arrayPos' not in st.session_state:
+        st.session_state.arrayPos = 0
 
     st.title("Detección en tiempo real")
 
     col1,col2,col3 = st.columns([1,2,1])
     
+    #verify if the arrayPos is in the correct range
+    def checkArrayPos():
+        if st.session_state.arrayPos < 0:
+            st.session_state.arrayPos = 25
+        elif st.session_state.arrayPos > 25:
+            st.session_state.arrayPos = 0
+    
+
+    def moveArray(direction):
+        if direction == "left":
+            st.session_state.arrayPos -= 1
+        elif direction == "right":
+            st.session_state.arrayPos += 1
+        checkArrayPos()
+
+
+
     with col2:
         stframe = st.empty()
 
         left,center,right = st.columns([1,2,1])
         with left:
-            st.button("⟵",key="goLeft")
+            st.button("⟵",key="goLeft",on_click=moveArray,args=("left",))
         with center:
             textClass = st.empty()
             textAccuracy = st.empty()
             textLastClass = ''
             textLastAccuracy = 0
             textBestAccuracy = st.empty()
+            st.text(letters[st.session_state.arrayPos])
             st.button("Modo automático",key="goAuto")
         with right:
-            st.button("⟶",key="goRight")
+            st.button("⟶", key="goRight", on_click=moveArray,args=("right",))
 
     while True:
         frame, detectedClass, detectedAccuracy = controlador.updateFrameC()
@@ -78,4 +96,3 @@ def mostrarPaginaDetection():
                 textBestAccuracy.text("Mejor precisión: {:.2f}%".format(controlador.get_precision(detectedClass[0])))
             else:
                 textBestAccuracy.text("No hay mejor precisión.")
-
