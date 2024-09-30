@@ -2,4 +2,5 @@ torch==2.3.1
 ultralytics
 numpy
 opencv-python-headless
+PyQt5
 Pillow
