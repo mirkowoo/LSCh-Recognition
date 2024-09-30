@@ -11,7 +11,10 @@ class ProgressView(QWidget):
     def mostrarProgresoAbc(self):
         for i,letter in enumerate(self.letters):
             self.table.setItem(i,0,QTableWidgetItem(letter))
-            self.table.setItem(i,1,QTableWidgetItem(str(f"{self.controlador.getPrecision(letter):.2f} %")))
+            if(self.controlador.getPrecision(letter) is None):
+                self.table.setItem(i,1,QTableWidgetItem("0%"))
+            else:
+                self.table.setItem(i,1,QTableWidgetItem(str(f"{self.controlador.getPrecision(letter):.2f} %")))
             
     def viewPreviewView(self):
 

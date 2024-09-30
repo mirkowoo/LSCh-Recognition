@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton,QComboBox, QApplication
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, QApplication, QHBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontDatabase, QFont
 
@@ -19,9 +19,12 @@ class HomeScreen(QWidget):
         self.setWindowTitle("Home Page")
 
         #botones de la pantalla principal
+        self.titulo = QLabel("Detector de LSCh",self)
         self.activitiesButton = QPushButton("Explorar Actividades",)
         self.progressButton = QPushButton("Ver Progreso")
         self.fontSelector = QComboBox(self)
+        self.mirkowooLabel = QLabel("mirkowoo",self)
+        
 
         #Ajustes visuales de los botones
         self.activitiesButton.setMinimumSize(200,50)
@@ -44,8 +47,10 @@ class HomeScreen(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         
         #añadir botones al layout
+        layout.addWidget(self.titulo)
         layout.addWidget(self.activitiesButton)
         layout.addWidget(self.progressButton)
         layout.addWidget(self.fontSelector)
+        layout.addWidget(self.mirkowooLabel)
 
         self.setLayout(layout)

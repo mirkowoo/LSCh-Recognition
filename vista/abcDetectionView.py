@@ -164,6 +164,10 @@ class AbcDetectionView(QWidget):
             # Actualizar etiquetas de clase detectada y precisión
             self.detectedClassLabel.setText(f"Clase detectada: {detectedClass}")
             self.detectedAccuracyLabel.setText(f"Precisión: {detectedAccuracy:.2f}%")
+
+            #Actualizar le mejor detección
+            self.bestDetectionLabel.setText(f"Mejor detección de {self.letters[self.arrayPos]}: {self.controlador.getPrecision(self.letters[self.arrayPos]):.2f} %")
+
             #cambios de color en la letra grande
             if detectedClass == [self.letters[self.arrayPos]]:
                 self.bigLetterLabel.setStyleSheet("color: green")
