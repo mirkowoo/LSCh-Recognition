@@ -2,7 +2,7 @@
 
 English:
 
-This is a project focused in the developing of an app and a database for a hand gesture recognition via camera using Yolo libs 
+This project focuses on developing an app and database for hand gesture recognition via a camera using YOLO libraries.
 
 Since it's creation, I've managed to create a python app that uses your camera to search for LSCh signs (Lengua de Señas Chilena).
 
@@ -10,16 +10,37 @@ This is a simple PyQt interface for the evaluation of the model trained in yolov
 It contains two main modules, the activities and the progress.
 The activities module only contains one activity available wich is "Abecedario".
 
-If you wanna use GPU (might run better), you need to install torch for your CUDA version
+There are two fonts you can use, Arial and OpenDyslexic, this last one being a font made by and for people with dyslexia.
 
-***To get your CUDA version***
-In cdm:
-    nvcc --version
+<details>
+<summary>Official link to Opendyslexic</summary>
+https://opendyslexic.org/about
+</details>
 
-Torch official page:
-    https://pytorch.org/get-started/locally/
+If you wanna use GPU (might run better), you need to install torch for your CUDA version. (Only works with NVIDIA)
 
+<details>
+<summary>Get your CUDA version</summary>
+
+```sh
+nvcc --version
+```
+</details>
+
+<details>
+<summary>Torch official page</summary>
+https://pytorch.org/get-started/locally/
+</details>
+
+To run the app:
+
+```sh
 pip install -r requirements.txt
+```
+
+```sh
+python main.py #|| Run the main.py file
+```
 
 <details>
 <summary>Español:</summary>
@@ -32,14 +53,33 @@ Esta es una interfaz simple de PyQt para la evaluación del modelo entrenado en 
 Contiene dos módulos principales, las actividades y el progreso.
 El módulo de actividades solo contiene una actividad disponible que es "Abecedario".
 
-Si deseas usar GPU (es recomendable), necesitas instalar torch para tu versión de CUDA. (Solo funciona con NVIDIA)
+Hay dos fuentes que puedes usar, Arial y OpenDyslexic, esta última siendo una fuente hecha por y para personas con dislexia.
 
-***Para obtener tu versión de CUDA***
-En cmd:
-    nvcc --version
-
-Página oficial de Torch:
-    https://pytorch.org/get-started/locally/
-
-pip install -r requirements.txt
+<details>
+<summary>Enlace oficial a Opendyslexic</summary>
+https://opendyslexic.org/about
 </details>
+
+Si deseas usar GPU (puede funcionar mejor), necesitas instalar torch para tu versión de CUDA. (Solo funciona con NVIDIA)
+
+<details>
+<summary>Obtener tu versión de CUDA</summary>
+
+```sh
+nvcc --version
+```
+</details>
+
+Para correr la aplicación:
+
+```sh
+pip install -r requirements.txt
+```
+
+```sh
+python main.py #|| Correr el archivo main.py
+```
+</details>
+
+
+![Yolov9 Model Test](img/test_1.gif)
