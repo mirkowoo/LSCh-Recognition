@@ -1,8 +1,9 @@
 import cv2 as cv
-from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,QGridLayout,QRadioButton,QComboBox
+from PyQt5.QtWidgets import QApplication,QWidget,QLabel,QPushButton,QVBoxLayout,QGridLayout,QRadioButton,QComboBox, QGraphicsOpacityEffect
 from PyQt5.QtGui import QPixmap,QImage,QFont
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QPropertyAnimation
 import time
+import random
 
 class AbcDetectionView(QWidget):
     def __init__(self,controller):
@@ -16,7 +17,9 @@ class AbcDetectionView(QWidget):
         self.timer.timeout.connect(self.updateImageData)
         self.lastDetectedClass = ""
         self.lastDetectedAccuracy = 0
-        
+        self.automaticMode = False
+        self.letterPoints = 0
+
         self.viewAbcDetectionScreen()
 
     def viewAbcDetectionScreen(self):
@@ -38,36 +41,57 @@ class AbcDetectionView(QWidget):
         self.bestDetectionLabel = QLabel("Mejor detección: ", self)
         self.selectedLetterImage = QLabel(self)
         self.selectedLetterImage.setPixmap(QPixmap(f"img/{self.letters[self.arrayPos]}.png"))
-        self.selectedFps = QComboBox(self)
+        #self.selectedFps = QComboBox(self)
+        self.selectLetterComboBox = QComboBox(self)
         self.currentFpsLabel = QLabel("FPS: ", self)
         self.backButton = QPushButton("Volver", self)
+        self.automaticModeButton = QRadioButton("Modo automático", self)
+
+        self.feedbackLabel = QLabel(self)
+        self.feedbackLabel.setAlignment(Qt.AlignCenter)
+        self.feedbackLabel.setObjectName("feedbackLabel")
+        self.feedbackOpacityEffect = QGraphicsOpacityEffect()
+        self.feedbackLabel.setGraphicsEffect(self.feedbackOpacityEffect)
+        self.feedbackLabel.maximumHeight = 50
 
         self.bigLetterLabel = QLabel(self)
         self.bigLetterLabel.setText(self.letters[self.arrayPos])
         self.bigLetterLabel.setFont(QFont('OpenDyslexic', 100,QFont.Bold))
         self.bigLetterLabel.setAlignment(Qt.AlignCenter)
+        self.bigLetterLabel.setObjectName("bigLetterLabel")
+        
 
         #conectar señales 
         self.buttonLeft.clicked.connect(lambda: self.moveArray("left"))
         self.buttonRight.clicked.connect(lambda: self.moveArray("right"))
         self.backButton.clicked.connect(lambda: self.controlador.showPage(1))
         self.listedCameras.currentIndexChanged.connect(lambda: [self.updateCamera(self.listedCameras.currentIndex())])
-        self.selectedFps.currentIndexChanged.connect(lambda: [self.updateTimer()])
+        #self.selectedFps.currentIndexChanged.connect(lambda: [self.updateTimer()])
+        self.selectLetterComboBox.currentIndexChanged.connect(lambda: [self.setArrayPos(self.selectLetterComboBox.currentIndex()),self.updateSelectedImage()])
+        self.automaticModeButton.clicked.connect(lambda: self.changeMode())
         #self.activatecameraButton.clicked.connect(lambda: self.activateCamera(self.listedCameras.currentIndex()))
 
         #Configuraciones de los widgets
         self.detectCameras()
-        self.selectedFps.addItems(["15","30","60","120","240","ilimitado"])
+        #self.selectedFps.addItems(["15","30","60","120","240","ilimitado"])
+        self.selectLetterComboBox.addItems(self.letters)
 
         #ajustes visuales
+        #self.backButton.setMaximumWidth(100)
+
         self.buttonLeft.setMinimumSize(200,50)
         
         self.buttonRight.setMinimumSize(200,50)
 
+        #layout para la cámara y retroalimentación
+        self.cameraLayout = QVBoxLayout()
+        self.cameraLayout.addWidget(self.cameraImage)
+        self.cameraLayout.addWidget(self.feedbackLabel)
+
         #layout para los textos de respuesta
         self.textLayout = QVBoxLayout()
         self.textLayout.setSpacing(5)
-
+        self.textLayout.addWidget(self.automaticModeButton)
         self.textLayout.addWidget(self.detectedClassLabel)
         self.textLayout.addWidget(self.detectedAccuracyLabel)
         self.textLayout.addWidget(self.selectedLetter)
@@ -84,10 +108,12 @@ class AbcDetectionView(QWidget):
         #layout.addWidget(self.label,0,0,1,1)
         layout.addWidget(self.backButton,0,0,1,1)
         layout.addWidget(self.listedCameras,0,1,1,1)
-        layout.addWidget(self.selectedFps,0,2,1,1)
+        #layout.addWidget(self.selectedFps,0,2,1,1)
+        layout.addWidget(self.selectLetterComboBox,0,2,1,1)
         #layout.addWidget(self.currentFpsLabel,0,2,1,1)
         #layout.addWidget(self.activatecameraButton,0,3,1,1)
-        layout.addWidget(self.cameraImage,1,1,1,1)
+        #layout.addWidget(self.cameraImage,1,1,1,1)
+        layout.addLayout(self.cameraLayout,1,1,1,1)
         layout.addWidget(self.selectedLetterImage,1,2,1,1)
         layout.addWidget(self.bigLetterLabel,1,0,1,1)
         layout.setAlignment(self.selectedLetterImage, Qt.AlignCenter)
@@ -98,12 +124,19 @@ class AbcDetectionView(QWidget):
         #layout.addWidget(self.detectedAccuracyLabel,4,1,1,1)
         #layout.addWidget(self.selectedLetter,5,1,1,1)
 
-        
-
         # Añadir layout a la ventana
         self.setLayout(layout)
 
         self.last_time = time.time()
+
+    def setArrayPos(self, index):
+        self.arrayPos = index
+
+    def changeMode(self):
+        if self.automaticMode:
+            self.automaticMode = False
+        else:
+            self.automaticMode = True
 
     # Verificar si el array de las letras da la vuelta
     def checkArrayPos(self):
@@ -136,11 +169,12 @@ class AbcDetectionView(QWidget):
     def updateTimer(self):
         if self.timer.isActive():
             self.timer.stop()
-        fpstext = self.selectedFps.currentText()
-        if self.selectedFps.currentText() == "ilimitado":
-            self.timer.start(0)
-        else:
-            self.timer.start(int(1000/int(float(fpstext))))
+        # fpstext = self.selectedFps.currentText()
+        self.timer.start(int(1000/int(float(30))))
+        # if self.selectedFps.currentText() == "ilimitado":
+        #     self.timer.start(0)
+        # else:
+        #     self.timer.start(int(1000/int(float(fpstext))))
 
     def startCamera(self):
         self.cap = cv.VideoCapture(0)
@@ -165,14 +199,40 @@ class AbcDetectionView(QWidget):
             self.detectedClassLabel.setText(f"Clase detectada: {detectedClass}")
             self.detectedAccuracyLabel.setText(f"Precisión: {detectedAccuracy:.2f}%")
 
-            #Actualizar le mejor detección
-            if(self.controlador.getPrecision(self.letters[self.arrayPos]) is not None):
+            # Actualizar la mejor detección
+            if self.controlador.getPrecision(self.letters[self.arrayPos]) is not None:
                 self.bestDetectionLabel.setText(f"Mejor detección de {self.letters[self.arrayPos]}: {self.controlador.getPrecision(self.letters[self.arrayPos]):.2f} %")
 
-            #cambios de color en la letra grande
+            # Inicializar el temporizador y el contador si no existen
+            if not hasattr(self, 'correctDetectionTime'):
+                self.correctDetectionTime = 0
+            if not hasattr(self, 'lastDetectionTime'):
+                self.lastDetectionTime = time.time()
+
+            # Verificar si la letra detectada es correcta
             if detectedClass == [self.letters[self.arrayPos]]:
-                self.bigLetterLabel.setStyleSheet("color: green")
+                currentTime = time.time()
+                self.correctDetectionTime += currentTime - self.lastDetectionTime
+                self.lastDetectionTime = currentTime
+
+                # Cambiar el color progresivamente
+                progress = min(self.correctDetectionTime / 5.0, 1.0)
+                greenValue = int(255 * progress)
+                redValue = 255 - greenValue
+                self.bigLetterLabel.setStyleSheet(f"color: rgb({redValue}, {greenValue}, 0)")
+
+                # Cambiar de letra automáticamente si se activa el modo automático y se ha detectado correctamente durante 5 segundos
+                if self.correctDetectionTime >= 5.0:
+                    feedback_options = ["Muy bien", "Excelente", "Bien hecho", "Perfecto"]
+                    feedback = random.choice(feedback_options)
+                    self.feedbackLabel.setText(feedback)
+                    self.startFeedbackFadeOut()
+                    if self.automaticMode:
+                        self.moveArray("right")
+                    self.correctDetectionTime = 0  # Reiniciar el contador
+
             else:
+                self.correctDetectionTime = 0
                 self.bigLetterLabel.setStyleSheet("color: red")
 
             self.bigLetterLabel.setText(self.letters[self.arrayPos])
@@ -185,6 +245,15 @@ class AbcDetectionView(QWidget):
             else:
                 # Si no hay detección nueva, mostrar la última detectada
                 self.lastDetectionLabel.setText(f"Última detección: {self.lastDetectedClass} con {self.lastDetectedAccuracy:.2f}% de precisión")
+
+    def startFeedbackFadeOut(self):
+        self.feedbackAnimation = QPropertyAnimation(self.feedbackOpacityEffect, b"opacity")
+        self.feedbackAnimation.setDuration(2000)  # Duración de la animación en milisegundos
+        self.feedbackAnimation.setStartValue(1)
+        self.feedbackAnimation.setEndValue(0)
+
+        # Usar QTimer para retrasar el inicio de la animación
+        QTimer.singleShot(0, self.feedbackAnimation.start)
 
     # Obtener una lista de las cámaras disponibles
     def detectCameras(self):

@@ -5,8 +5,10 @@ from modelo.model import Model
 from controlador.controller import Controller
 
 if __name__ == "__main__":
-
+    
     app = QApplication(sys.argv)
+    #cambiar el color de fondo de la aplicación
+    app.setStyleSheet("background-color: #EAE8FF;")
     model = Model(cameraIndex=0)
     controller = Controller()  
 

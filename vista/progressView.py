@@ -6,6 +6,7 @@ class ProgressView(QWidget):
         super().__init__()
         self.controlador = controller
         self.letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y"]
+
         self.viewPreviewView()   
 
     def mostrarProgresoAbc(self):

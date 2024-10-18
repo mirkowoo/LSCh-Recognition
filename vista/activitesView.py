@@ -6,6 +6,7 @@ class ActivitiesView(QWidget):
     def __init__(self,controller):
         super().__init__()
         self.controlador = controller
+
         self.viewActivitiesView()
     
     def viewActivitiesView(self):
