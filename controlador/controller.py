@@ -82,6 +82,14 @@ class Controller:
             QLabel {{
                 font-size: 18px;
             }}
+            QPushButton#confirmButton{{
+                background-color: #FF6B6B;
+                color: white;
+            }}
+            QPushButton#confirmButton:hover{{
+                background-color: #FF4C4C;
+            }}
+
         """
 
         abcDetectionViewStyles = commonStyles + f"""
@@ -89,10 +97,11 @@ class Controller:
                 font-size: 18px;
             }}
             #bigLetterLabel{{
-                font-size: 100px;
+                font-size: 120px;
             }}
             #feedbackLabel{{
-                font-size: 36px;
+                font-size: 80px;
+                font-weight: bold;
             }}
         """
 

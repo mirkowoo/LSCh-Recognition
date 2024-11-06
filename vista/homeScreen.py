@@ -14,8 +14,6 @@ class HomeScreen(QWidget):
         else:
             self.font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
 
-        self.controlador.changeFont("Arial")
-
         # Define individual styles for this screen
         self.stylesheet = f"""
         QPushButton {{
@@ -29,7 +27,7 @@ class HomeScreen(QWidget):
             background-color: #B0D7FF;
         }}
         QLabel {{
-            font-size: 18px;
+            font-size: 20px;
             color: #2D3142;
         }}
         QComboBox {{
@@ -41,10 +39,14 @@ class HomeScreen(QWidget):
 
         self.setStyleSheet(self.stylesheet)
 
+        
+
         self.viewHomeScreen()
 
     def viewHomeScreen(self):
 
+        
+        
         self.setWindowTitle("Home Page")
 
         self.setGeometry(100, 100, 600, 400)
@@ -89,3 +91,5 @@ class HomeScreen(QWidget):
         layout.addWidget(self.mirkowooLabel)
 
         self.setLayout(layout)
+
+        self.controlador.changeFont(self.fontSelector.currentText())

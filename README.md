@@ -30,6 +30,11 @@ nvcc --version
 ```
 </details>
 
+<details>
+<summary>Página oficial de Torch</summary>
+https://pytorch.org/get-started/locally/
+</details>
+
 Para correr la aplicación:
 
 ```sh
