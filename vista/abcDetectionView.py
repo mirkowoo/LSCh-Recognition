@@ -268,7 +268,7 @@ class AbcDetectionView(QWidget):
             if detectedClass == [self.letters[self.arrayPos]]:
                 self.correctDetectionTime += currentTime - self.lastDetectionTime
                 self.lastDetectionTime = currentTime
-                self.correctDetectionTimeLabel.setText(f"Tiempo de detección: {self.correctDetectionTime:.2f}s")
+                self.correctDetectionTimeLabel.setText(f"Tiempo de detección: {self.correctDetectionTime:.2f}s / 5.00s")
                 # Cambiar el color progresivamente
                 progress = min(self.correctDetectionTime / 5.0, 1.0)
                 greenValue = int(255 * progress)
@@ -287,7 +287,7 @@ class AbcDetectionView(QWidget):
                 self.correctDetectionTime = 0
                 self.lastDetectionTime = currentTime  # Reiniciar el tiempo de detección
                 self.bigLetterLabel.setStyleSheet("color: red")
-                self.correctDetectionTimeLabel.setText(f"Tiempo de detección: 0.00s")
+                self.correctDetectionTimeLabel.setText(f"Tiempo de detección: 0.00s / 5.00s")
 
             self.bigLetterLabel.setText(self.letters[self.arrayPos])
             # Guardar y mostrar la última detección

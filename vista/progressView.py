@@ -93,6 +93,11 @@ class ProgressView(QWidget):
         self.confirmButton.setVisible(False)
         self.deleteButton.setVisible(True)
 
+    def resetButtons(self):
+        self.confirmButton.setVisible(False)
+        self.deleteButton.setVisible(True)
+
     def showEvent(self, event):
         self.mostrarProgresoAbc()
+        self.resetButtons()
         super().showEvent(event)
