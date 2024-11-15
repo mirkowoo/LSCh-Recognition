@@ -31,8 +31,8 @@ nvcc --version
 </details>
 
 <details>
-<summary>Página oficial de Torch</summary>
-https://pytorch.org/get-started/locally/
+<summary>Instalar torch versión 2.3.1 en su versión CUDA específica</summary>
+https://pytorch.org/get-started/previous-versions/#v231
 </details>
 
 Para correr la aplicación:
@@ -75,8 +75,8 @@ nvcc --version
 </details>
 
 <details>
-<summary>Torch official page</summary>
-https://pytorch.org/get-started/locally/
+<summary>Install torch version 2.3.1 in your CUDA specific version</summary>
+https://pytorch.org/get-started/previous-versions/#v231
 </details>
 
 To run the app:
