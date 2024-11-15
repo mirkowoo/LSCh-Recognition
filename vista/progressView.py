@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QMessageBox
 from PyQt5.QtCore import Qt
 
 class ProgressView(QWidget):
@@ -19,11 +19,11 @@ class ProgressView(QWidget):
         QPushButton:hover {
             background-color: #B0D7FF;
         }
-        QPushButton#confirmButton {
+        QPushButton#deleteButton {
             background-color: #FF6B6B;
             color: white;
         }
-        QPushButton#confirmButton:hover {
+        QPushButton#deleteButton:hover {
             background-color: #FF4C4C;
         }
         QLabel {
@@ -55,9 +55,7 @@ class ProgressView(QWidget):
         self.backButton = QPushButton("Volver")
         self.title = QLabel("Progreso")
         self.deleteButton = QPushButton("Borrar Progreso")
-        self.confirmButton = QPushButton("Confirmar Borrado")
-        self.confirmButton.setObjectName("confirmButton")
-        self.confirmButton.setVisible(False)
+        self.deleteButton.setObjectName("deleteButton")
 
         # crear tabla
         self.table = QTableWidget()
@@ -68,8 +66,7 @@ class ProgressView(QWidget):
 
         # conectar botones a funciones
         self.backButton.clicked.connect(lambda: self.controlador.showPage(0))
-        self.deleteButton.clicked.connect(self.showConfirmButton)
-        self.confirmButton.clicked.connect(self.confirmDelete)
+        self.deleteButton.clicked.connect(self.showPopup)
 
         # layout de la pantalla de progreso
         layout = QVBoxLayout()
@@ -79,22 +76,30 @@ class ProgressView(QWidget):
         layout.addWidget(self.title)
         layout.addWidget(self.table)
         layout.addWidget(self.deleteButton)
-        layout.addWidget(self.confirmButton)
 
         self.setLayout(layout)
 
-    def showConfirmButton(self):
-        self.deleteButton.setVisible(False)
-        self.confirmButton.setVisible(True)
+    def showPopup(self):
+        reply = QMessageBox.question(self, 'Confirmación', '¿Está seguro de que quiere eliminar los datos?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            self.confirmDelete()
 
     def confirmDelete(self):
         self.controlador.deleteData()
         self.mostrarProgresoAbc()
-        self.confirmButton.setVisible(False)
-        self.deleteButton.setVisible(True)
+        self.showSuccessPopup()
+
+    def showSuccessPopup(self):
+        successPopup = QMessageBox(self)
+        successPopup.setWindowTitle('Confirmación')
+        successPopup.setText('Datos eliminados correctamente')
+        successPopup.setStandardButtons(QMessageBox.Ok)
+        successPopup.buttonClicked.connect(successPopup.close)
+        successPopup.exec_()
 
     def resetButtons(self):
-        self.confirmButton.setVisible(False)
         self.deleteButton.setVisible(True)
 
     def showEvent(self, event):

@@ -82,11 +82,11 @@ class Controller:
             QLabel {{
                 font-size: 18px;
             }}
-            QPushButton#confirmButton{{
+            QPushButton#deleteButton{{
                 background-color: #FF6B6B;
                 color: white;
             }}
-            QPushButton#confirmButton:hover{{
+            QPushButton#deleteButton:hover{{
                 background-color: #FF4C4C;
             }}
 

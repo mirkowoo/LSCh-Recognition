@@ -189,6 +189,9 @@ class AbcDetectionView(QWidget):
 
     def setArrayPos(self, index):
         self.arrayPos = index
+        self.updateSelectedImage()
+        self.selectedLetter.setText(f"Letra seleccionada: {self.letters[self.arrayPos]}")
+        self.selectLetterComboBox.setCurrentIndex(self.arrayPos)
 
     def changeMode(self):
         if self.automaticMode:
@@ -214,6 +217,7 @@ class AbcDetectionView(QWidget):
         self.checkArrayPos()
         self.updateSelectedImage()
         self.selectedLetter.setText(f"Letra seleccionada: {self.letters[self.arrayPos]}")
+        self.selectLetterComboBox.setCurrentIndex(self.arrayPos)
 
     def updateLabel(self, counter):
         self.label.setText(f"Contador: {counter}")
