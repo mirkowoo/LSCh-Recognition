@@ -20,7 +20,7 @@ https://opendyslexic.org/about
 </details>
 
 El modelo principal está preparado para trabajar mejor con la GPU, por lo que es recomendado instalar torch para tu versión específica de CUDA. (NVIDIA)
-
+***INSTALAR TORCH CON USO DE GPU DESPUÉS DE INSTALAR LAS DEPENDENCIAS***
 <details>
 <summary>Obtener tu versión de CUDA</summary>
 En cmd:
@@ -65,6 +65,7 @@ https://opendyslexic.org/about
 </details>
 
 The main model is made so it runs better on GPU, so it's recommended to install torch for your specific CUDA version.(NVIDIA)
+***INSTALL TORCH WITH GPU AFTER THE DEPENDENCES*** 
 
 <details>
 <summary>Get your CUDA version</summary>
