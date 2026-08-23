@@ -641,6 +641,39 @@ Verificado: sin token y con token basura, la Automation rechaza.
 - [ ] Cargar `LSCh_Contenidos` con los enlaces y textos.
 - [x] ~~Decidir cómo lee un usuario su propio historial~~ — filtro por fila `__SELF__` sobre el rol `estudiante`
 
+## C.1c Despliegue — hecho, con una pérdida que hay que anotar
+
+**LSCh está en https://lsch.praxsuite.app** (app `4296f1b4-4456-418c-bea8-06ad59c1170e`).
+
+Como `dist/` pesa 34 MB y el deploy inline topa en 8, se usó `connect_app_repo` contra una rama **`deploy`** del repo `mirkowoo/LSCh-Recognition` que contiene solo la salida del build en la raíz. `main` queda con el fuente limpio. Para actualizar:
+
+```
+npm run build --prefix web
+# publicar el contenido de web/dist/ en la rama deploy
+# sync_app_repo(app_id)
+```
+
+Verificado en producción: el modelo carga, y **`Motor: webgpu · 1 hilo(s) WASM`**.
+
+### Verificación #3 respondida: Praxsuite NO permite COOP/COEP
+
+`crossOriginIsolated` es `false` en el sitio desplegado. No hay WASM multihilo — el fallback queda en un solo hilo. **No resultó grave porque WebGPU sí funciona** y es el proveedor activo. En un equipo sin WebGPU el rendimiento va a ser notablemente peor que los 16,2 ms medidos, y eso sigue sin medirse.
+
+### ⚠ `sync_app_repo` también borra lo que no está en el repo
+
+**Hallazgo nuevo, aprendido a costa de perder archivos.** Las notas del Portafolio documentaban que `deploy_app_bundle` es reemplazo total; **`sync_app_repo` lo es también**. Al sincronizar el Portafolio se reportó `filesUploaded: 26, filesDeleted: 24`, y desaparecieron cuatro archivos que vivían solo en el CDN y no en el repo:
+
+| Archivo | Qué era |
+|---|---|
+| `yipee.gif` | 172 KB, subido el 13-08 fuera del repo. **Sin copia local.** |
+| `styles/global.css` | Hoja de la plantilla del portal |
+| `robots.txt` | |
+| `Appmap.xml` | |
+
+No se pudieron recuperar del borde: el CDN ya responde con el fallback de SPA. El sitio funciona igual y no hay imágenes rotas en la portada, pero si `yipee.gif` estaba referenciado en algún post, ahí quedó un hueco.
+
+**Regla para adelante: todo lo que deba vivir en el sitio tiene que estar en el repo.** Antes de cualquier `sync_app_repo`, comparar `list_app_files` contra el repo y rescatar lo que solo exista en el CDN.
+
 ## C.2 Modelo de datos
 
 Cinco tablas nuevas, todas con prefijo `LSCh_` para no mezclarse con las del portafolio.
@@ -827,13 +860,13 @@ Contenido inicial sugerido:
 
 ### Hito 3 — Praxsuite (~1 semana)
 
-- [ ] `create_app` con subdominio `lsch`
+- [x] `create_app` con subdominio `lsch` → https://lsch.praxsuite.app
 - [x] Crear las cinco tablas con sus columnas
 - [x] Rol `estudiante` + credencial pública acotada
 - [x] Login y registro → `web/src/praxsuite/` · [ ] recuperación de contraseña y refresh
 - [ ] Persistencia de intentos y sesiones (camino 1 o 2 según §C.5)
 - [ ] `/progreso` con el historial personal
-- [ ] Deploy key configurada y primer despliegue real
+- [x] Primer despliegue real, vía rama `deploy` + `connect_app_repo` (no hizo falta deploy key)
 
 ### Hito 4 — Leaderboard y contenido (~4–5 días)
 
@@ -865,9 +898,9 @@ Ninguna de estas está confirmada. Cada una puede cambiar el plan.
 | 1b | ~~¿Qué encuadre usar?~~ **Resuelto: recorte central** (§A.0) | — |
 | 2 | ~~¿Latencia en navegador bajo 150 ms?~~ **Resuelto: 16,2 ms con WebGPU** (§A.0) | — |
 | 2b | ¿Cuánto cuesta en un equipo SIN WebGPU (WASM puro)? | Bajar la frecuencia de inferencia |
-| 3 | ¿Praxsuite permite cabeceras COOP/COEP en el sitio estático? | Sin WASM multihilo. Menos grave de lo previsto: con WebGPU disponible el camino rápido no depende de esto |
+| 3 | ~~¿Praxsuite permite COOP/COEP?~~ **Resuelto: no.** `crossOriginIsolated=false` (§C.1c). WebGPU salva el caso | — |
 | 4 | ~~¿Filtra por fila según el JWT?~~ **Resuelto en la práctica:** el patrón del workspace es escribir vía Automation, que deriva la identidad del token (§C.1b) | — |
-| 5 | ¿El hosting hace fallback a `index.html` en rutas de SPA? | Hash routing |
+| 5 | ~~¿Hay fallback a `index.html`?~~ **Sí**, verificado en producción | — |
 | 6 | ¿Qué política de confirmación por correo tiene el workspace? | Cambia el flujo de registro |
 | 7 | ¿La URL prefirmada de un blob de Praxsuite sirve para cargar el `.onnx` (CORS, caducidad)? | Usar la deploy key |
 | 8 | ~~¿El modelo funciona con el frame espejado?~~ **Casi resuelto:** el entrenamiento usó volteo horizontal (§3.3) | Confirmar con cámara |
