@@ -210,20 +210,25 @@ export function Practica({
 
   return (
     <div className="practica">
-      <div className="practica-camara">
-        <video ref={videoRef} playsInline muted />
-        {!estado.camaraActiva && (
-          <div className="practica-overlay">
-            <button onClick={encenderCamara} disabled={!estado.listo}>
-              {estado.listo ? 'Encender cámara' : 'Cargando modelo…'}
-            </button>
-          </div>
-        )}
-      </div>
+      {/* La camara y su pie van envueltos: `.practica` es una grilla de dos
+          columnas y cualquier hijo directo extra se lleva una celda. Sin este
+          contenedor el aviso ocupaba la columna del panel. */}
+      <div className="practica-izquierda">
+        <div className="practica-camara">
+          <video ref={videoRef} playsInline muted />
+          {!estado.camaraActiva && (
+            <div className="practica-overlay">
+              <button onClick={encenderCamara} disabled={!estado.listo}>
+                {estado.listo ? 'Encender cámara' : 'Cargando modelo…'}
+              </button>
+            </div>
+          )}
+        </div>
 
-      <p className="practica-consejo">
-        Recuerda estar en un ambiente bien iluminado.
-      </p>
+        <p className="practica-consejo">
+          Recuerda estar en un ambiente bien iluminado.
+        </p>
+      </div>
 
       <div className="practica-panel">
         {contexto && <div className="practica-contexto">{contexto}</div>}

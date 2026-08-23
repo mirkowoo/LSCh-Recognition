@@ -129,7 +129,15 @@ tr.lider td { color: var(--ok); }
 /* El video se recorta al cuadrado central: object-fit cover sobre un contenedor
    1:1 con fuente 16:9 recorta los lados por igual — exactamente lo mismo que
    hace `encuadrar()` en modo recorte. Lo que ves es lo que el modelo recibe. */
-.practica-camara { aspect-ratio: 1; max-width: 520px; margin: 0 auto; }
+.practica-camara {
+  /* width definido: como bloque normal se estira hasta max-width. Antes esto
+     era hijo directo de la grilla y `margin: 0 auto` lo hacia ajustarse al
+     contenido, colapsando a 300px. */
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+}
 .practica-camara video { width: 100%; height: 100%; object-fit: cover; }
 .practica-camara::after {
   content: 'lo que ve el modelo';
