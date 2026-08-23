@@ -204,3 +204,29 @@ button.secundario { width: 100%; padding: 10px; }
   color: var(--tenue); font-size: 12px; text-align: center;
   margin: 10px 0 0; max-width: 520px; margin-inline: auto;
 }
+
+/* --- menu de usuario --- */
+.menu-usuario { position: relative; }
+.menu-usuario > button { display: flex; align-items: center; gap: 8px; }
+.menu-usuario-avatar {
+  width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
+  background: #2a2f3a; display: grid; place-items: center;
+  font-size: 11px; font-weight: 700; color: var(--texto); flex: none;
+}
+.menu-usuario-lista {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  min-width: 190px; background: var(--panel);
+  border: 1px solid var(--borde); border-radius: 8px; padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.menu-usuario-lista button {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: transparent; border: none; text-align: left;
+  padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--texto);
+}
+.menu-usuario-lista button:hover { background: #232833; }
+.menu-usuario-lista .separador { height: 1px; background: var(--borde); margin: 4px 0; }
+.menu-usuario-correo {
+  padding: 8px 10px 6px; font-size: 11px; color: var(--tenue);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

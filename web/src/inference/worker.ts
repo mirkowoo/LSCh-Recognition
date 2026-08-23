@@ -22,10 +22,6 @@ interface MensajeInit {
   rutaModelo: string;
   rutaMeta: string;
 }
-interface MensajeBench {
-  tipo: 'bench';
-  repeticiones: number;
-}
 interface MensajeInferir {
   tipo: 'inferir';
   id: number;
@@ -33,7 +29,7 @@ interface MensajeInferir {
   /** Un tensor NCHW ya preprocesado por cada encuadre a evaluar. */
   entradas: { encuadre: Encuadre; datos: Float32Array }[];
 }
-type Mensaje = MensajeInit | MensajeInferir | MensajeBench;
+type Mensaje = MensajeInit | MensajeInferir;
 
 async function init(msg: MensajeInit) {
   meta = await fetch(msg.rutaMeta).then((r) => r.json());
@@ -99,43 +95,10 @@ async function inferir(msg: MensajeInferir) {
   self.postMessage({ tipo: 'resultado', id: msg.id, resultado });
 }
 
-/**
- * Mide latencia con entrada sintetica. Responde la pregunta que el benchmark
- * nativo no puede: cuanto cuesta una inferencia en ESTE navegador y equipo.
- */
-async function bench(msg: MensajeBench) {
-  if (!sesion) return;
-  const datos = new Float32Array(3 * 320 * 320);
-  for (let i = 0; i < datos.length; i++) datos[i] = Math.random();
-
-  const correr = async () => {
-    const tensor = new ort.Tensor('float32', datos, [1, 3, 320, 320]);
-    const t = performance.now();
-    await sesion!.run({ [nombreEntrada]: tensor });
-    return performance.now() - t;
-  };
-
-  for (let i = 0; i < 10; i++) await correr(); // calentamiento
-  const tiempos: number[] = [];
-  for (let i = 0; i < msg.repeticiones; i++) tiempos.push(await correr());
-  tiempos.sort((a, b) => a - b);
-
-  self.postMessage({
-    tipo: 'bench',
-    proveedor,
-    repeticiones: msg.repeticiones,
-    mediana: tiempos[Math.floor(tiempos.length / 2)],
-    p90: tiempos[Math.floor(tiempos.length * 0.9)],
-    min: tiempos[0],
-    max: tiempos[tiempos.length - 1],
-  });
-}
-
 self.onmessage = async (e: MessageEvent<Mensaje>) => {
   try {
     if (e.data.tipo === 'init') await init(e.data);
     else if (e.data.tipo === 'inferir') await inferir(e.data);
-    else if (e.data.tipo === 'bench') await bench(e.data);
   } catch (err) {
     self.postMessage({ tipo: 'error', mensaje: String(err) });
   }

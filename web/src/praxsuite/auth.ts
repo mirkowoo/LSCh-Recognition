@@ -15,6 +15,7 @@
  *    creeria una identidad y el servidor escribiria otra.
  */
 import { ErrorPraxsuite, peticionAuth } from './api';
+import { CONFIG } from './config';
 
 const CLAVE_ALMACEN = 'lsch.sesion';
 
@@ -197,3 +198,36 @@ export function salir() {
 }
 
 cargar();
+
+/** Perfil propio del end-user, tal como lo devuelve GET /profile/me. */
+export interface PerfilPropio {
+  id: string;
+  email: string;
+  username?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  settings: Record<string, unknown>;
+}
+
+/**
+ * Lee el perfil propio.
+ *
+ * Es self-service: se autentica con el JWT del usuario, sin credenciales de
+ * admin. El perfil vive en la cuenta del workspace, no en una tabla, asi que es
+ * el mismo en todas las apps.
+ */
+export async function perfilPropio(): Promise<PerfilPropio | null> {
+  const token = obtenerToken();
+  if (!token) return null;
+  try {
+    const r = await fetch(CONFIG.perfilUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!r.ok) return null;
+    return (await r.json()) as PerfilPropio;
+  } catch {
+    // El perfil es decorativo aca: si falla, la app sigue con el nombre del JWT.
+    return null;
+  }
+}

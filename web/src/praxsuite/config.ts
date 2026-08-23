@@ -22,6 +22,10 @@ export const CONFIG = {
    * que falsificar.
    */
   cerrarSesionUrl: `${GATEWAY}/endpoint/77c6b447-23a7-4cb3-b3b0-3c9a681396ee`,
+  /** El hub: el perfil y los logros viven alla, compartidos entre apps. */
+  portafolioUrl: 'https://mirkowo.praxsuite.app/index.html#/perfil',
+  /** Perfil propio del end-user. Self-service con el JWT: no necesita admin. */
+  perfilUrl: `${GATEWAY}/profile/me`,
   clavePublica:
     'pk_live_316911b6e9e4d4b84d94c7625a2aed20dae5f04895560f52f3b521ac95b75158',
   tablas: {

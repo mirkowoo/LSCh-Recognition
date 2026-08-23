@@ -1,30 +1,59 @@
 /**
  * Cascaron de la aplicacion.
  *
- * Sin router todavia: son tres vistas y un estado. El routing real entra cuando
- * haya URLs que compartir (una seccion de contenidos, un perfil).
+ * El perfil no se edita aca: vive en el portafolio, que es el hub del workspace.
+ * Esta app solo lo lee para mostrar nombre y foto en la cabecera.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Practica } from './vistas/Practica';
 import { Evaluacion } from './vistas/Evaluacion';
 import { Portal } from './vistas/Portal';
-import { PruebaEncuadre } from './vistas/PruebaEncuadre';
+import { MenuUsuario } from './vistas/MenuUsuario';
 import { ABECEDARIO, LETRAS_DINAMICAS } from './puntaje';
-import { alCambiar, haySesion, nombreVisible, salir } from './praxsuite/auth';
-import type { Sesion } from './praxsuite/auth';
+import {
+  alCambiar,
+  haySesion,
+  nombreVisible,
+  obtenerSesion,
+  perfilPropio,
+  salir,
+} from './praxsuite/auth';
+import type { PerfilPropio, Sesion } from './praxsuite/auth';
 
-type Vista = 'practica' | 'evaluacion' | 'encuadre';
+type Vista = 'practica' | 'evaluacion';
 
 export function App() {
   const [, setSesion] = useState<Sesion | null>(null);
+  const [perfil, setPerfil] = useState<PerfilPropio | null>(null);
   const [invitado, setInvitado] = useState(false);
   const [vista, setVista] = useState<Vista>('practica');
   const [letraLibre, setLetraLibre] = useState('A');
 
-  // Re-renderiza cuando entra o sale un usuario.
   useEffect(() => alCambiar(setSesion), []);
 
   const identificado = haySesion();
+
+  // El perfil se lee una vez por sesión: nombre y foto para la cabecera.
+  useEffect(() => {
+    if (!identificado) {
+      setPerfil(null);
+      return;
+    }
+    let vivo = true;
+    perfilPropio().then((p) => {
+      if (vivo) setPerfil(p);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [identificado]);
+
+  const cerrar = useCallback(() => {
+    salir();
+    setPerfil(null);
+    setInvitado(false);
+    setVista('practica');
+  }, []);
 
   if (!identificado && !invitado) {
     return (
@@ -37,11 +66,8 @@ export function App() {
     );
   }
 
-  const cerrar = () => {
-    salir();
-    setInvitado(false);
-    setVista('practica');
-  };
+  const nombre = perfil?.username || nombreVisible();
+  const correo = perfil?.email || obtenerSesion()?.usuario.email || null;
 
   return (
     <div className="envoltorio">
@@ -65,21 +91,16 @@ export function App() {
           >
             Evaluación
           </button>
-          <button
-            className={vista === 'encuadre' ? 'activo' : ''}
-            onClick={() => setVista('encuadre')}
-            title="Herramienta de diagnóstico"
-          >
-            Diagnóstico
-          </button>
         </nav>
 
         <div className="cabecera-sesion">
           {identificado ? (
-            <>
-              <span className="detalle">{nombreVisible()}</span>
-              <button onClick={cerrar}>Salir</button>
-            </>
+            <MenuUsuario
+              nombre={nombre}
+              email={correo}
+              avatarUrl={perfil?.profileImageUrl || null}
+              onSalir={cerrar}
+            />
           ) : (
             <>
               <span className="detalle">Invitado</span>
@@ -120,7 +141,6 @@ export function App() {
       )}
 
       {vista === 'evaluacion' && identificado && <Evaluacion />}
-      {vista === 'encuadre' && <PruebaEncuadre />}
     </div>
   );
 }
