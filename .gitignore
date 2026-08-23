@@ -1,5 +1,29 @@
+# Python
 __pycache__
-.vscode
-app
-
 .venv
+
+# Editor
+.vscode
+
+# Herramientas locales
+app
+.claude/
+
+# Dataset descargado de Roboflow y trabajo temporal.
+# El dataset NO se versiona: se baja con la API key (ver PLAN_EMPAQUETADO_WEB.md).
+.rf/
+runs/
+
+# Artefactos de build
+web/node_modules
+web/dist
+*.onnx.bak
+
+# Copia del modelo dentro del bundle: se genera con `npm run prepare-modelo`
+# desde models/. Versionarla duplicaria 7,8 MB en el repo.
+web/public/models/*.onnx
+web/public/models/*.json
+
+# Las imagenes de referencia se copian desde img/ con el mismo script.
+web/public/img/letras/
+*.tsbuildinfo

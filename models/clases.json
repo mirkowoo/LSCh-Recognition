@@ -1,0 +1,57 @@
+{
+  "clases": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z"
+  ],
+  "numClases": 26,
+  "opset": 12,
+  "modelos": {
+    "320": {
+      "archivo": "best-320.onnx",
+      "resolucion": 320,
+      "mb": 7.8
+    },
+    "640": {
+      "archivo": "best-640.onnx",
+      "resolucion": 640,
+      "mb": 7.92
+    }
+  },
+  "preprocesado": {
+    "letterbox": true,
+    "colorPad": 114,
+    "orden": "RGB",
+    "layout": "NCHW",
+    "escala": "dividir por 255"
+  },
+  "postprocesado": {
+    "formaSalida": "[1, 4 + numClases, anchors]",
+    "filas0a3": "cx, cy, w, h en pixeles de la entrada (no normalizados)",
+    "filasRestantes": "puntajes por clase, sigmoide ya aplicada, sin objectness",
+    "objectness": false
+  }
+}
