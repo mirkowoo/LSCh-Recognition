@@ -22,6 +22,20 @@ export const CONFIG = {
    * que falsificar.
    */
   cerrarSesionUrl: `${GATEWAY}/endpoint/77c6b447-23a7-4cb3-b3b0-3c9a681396ee`,
+  /**
+   * Endpoint sync que guarda la sesion y sus intentos.
+   *
+   * Antes el cliente escribia directo con su JWT y el gateway estampaba la
+   * columna `Usuario` desde el claim `sub`. No funciona: `Usuario` es de tipo
+   * Enduser — uuid[] en la base — y la plantilla la inserta como texto:
+   *
+   *   column "COL_37454ED4_..." is of type uuid[] but expression is of type text
+   *
+   * La automation detras valida el JWT con ValidateEndUserToken y arma las filas
+   * estampando el id como VALOR de fila, camino que si acepta un UUID suelto.
+   * La identidad la sigue poniendo el servidor: el cuerpo no la decide.
+   */
+  guardarSesionUrl: `${GATEWAY}/endpoint/127cd4cd-c5cc-4556-963c-51ddb21b6d23`,
   /** El hub: el perfil y los logros viven alla, compartidos entre apps. */
   portafolioUrl: 'https://mirkowo.praxsuite.app/index.html#/perfil',
   /** Perfil propio del end-user. Self-service con el JWT: no necesita admin. */

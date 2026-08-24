@@ -118,16 +118,90 @@ function guardar(siguiente: Sesion | null) {
   } else {
     localStorage.removeItem(CLAVE_ALMACEN);
   }
+  programarRelojes();
   oyentes.forEach((fn) => fn(sesion));
 }
 
+/** Margen contra el `exp` real: 30 s antes ya se considera vencida. */
+const MARGEN_MS = 30_000;
+
+/** Cuanto antes del vencimiento se avisa. */
+const AVISO_MS = 5 * 60_000;
+
 /** La expiracion sale del claim `exp`, que es el mismo valor que revisa el servidor. */
 export function expirada(): boolean {
+  const ms = msHastaVencer();
+  return ms !== null && ms <= 0;
+}
+
+/**
+ * Milisegundos hasta que la sesion deje de servir, o null si no hay sesion o el
+ * token no declara `exp`.
+ */
+export function msHastaVencer(): number | null {
   const token = sesion?.accessToken;
-  if (!token) return false;
+  if (!token) return null;
   const exp = leerClaims(token).exp;
-  if (!exp) return false;
-  return Date.now() >= exp * 1000 - 30_000; // 30 s de margen
+  if (!exp) return null;
+  return exp * 1000 - MARGEN_MS - Date.now();
+}
+
+export type EstadoSesion = 'sin-sesion' | 'activa' | 'por-vencer' | 'vencida';
+
+/**
+ * El estado que le importa a la interfaz.
+ *
+ * 'vencida' NO es lo mismo que 'sin-sesion': la sesion sigue en memoria, con el
+ * correo de quien estaba conectado, para poder ofrecer volver a entrar sin
+ * escribirlo de nuevo — y sobre todo sin echar a nadie de la pantalla en la que
+ * estaba. Una evaluacion a medias se pierde entera si se cierra la sesion.
+ */
+export function estadoSesion(): EstadoSesion {
+  if (!sesion?.accessToken) return 'sin-sesion';
+  const ms = msHastaVencer();
+  if (ms === null) return 'activa';
+  if (ms <= 0) return 'vencida';
+  return ms <= AVISO_MS ? 'por-vencer' : 'activa';
+}
+
+// ---------------------------------------------------------------------------
+// AVISO DE VENCIMIENTO
+//
+// El problema que resuelve: `expirada()` solo se consultaba al renderizar, y
+// nada provocaba un render cuando el token moria. La sesion se apagaba en
+// silencio — la cabecera seguia mostrando el nombre, y el usuario se enteraba
+// al terminar la evaluacion, que es el peor momento posible para enterarse.
+//
+// Dos relojes: uno cinco minutos antes (para poder reconectarse a tiempo) y
+// otro al vencer. Ambos solo NOTIFICAN; no borran nada.
+// ---------------------------------------------------------------------------
+
+let relojes: ReturnType<typeof setTimeout>[] = [];
+
+function pararRelojes() {
+  relojes.forEach(clearTimeout);
+  relojes = [];
+}
+
+function avisar() {
+  oyentes.forEach((fn) => fn(sesion));
+}
+
+function programarRelojes() {
+  pararRelojes();
+  const ms = msHastaVencer();
+  if (ms === null || ms <= 0) return;
+  if (ms > AVISO_MS) relojes.push(setTimeout(avisar, ms - AVISO_MS));
+  relojes.push(setTimeout(avisar, ms));
+}
+
+// Un setTimeout no es fiable si el equipo se suspende: puede disparar tarde o
+// no disparar. Volver a la pestana es justo cuando hay que recalcular, y es el
+// caso mas comun de todos — dejar el navegador abierto y volver al otro dia.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') avisar();
+  });
 }
 
 export function obtenerSesion(): Sesion | null {
@@ -198,6 +272,9 @@ export function salir() {
 }
 
 cargar();
+// Al arrancar con una sesion viva hay que armar los relojes: cargar() escribe
+// `sesion` directo, sin pasar por guardar().
+programarRelojes();
 
 /** Perfil propio del end-user, tal como lo devuelve GET /profile/me. */
 export interface PerfilPropio {

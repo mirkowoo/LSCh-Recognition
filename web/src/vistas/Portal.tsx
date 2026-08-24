@@ -12,11 +12,13 @@ import { ErrorPraxsuite } from '../praxsuite/api';
 interface Props {
   onEntrar: () => void;
   onInvitado: () => void;
+  /** Abre el manejo de datos. Va aca porque es donde se crea la cuenta. */
+  onDatos: () => void;
 }
 
 type Modo = 'entrar' | 'registrar';
 
-export function Portal({ onEntrar, onInvitado }: Props) {
+export function Portal({ onEntrar, onInvitado, onDatos }: Props) {
   const [modo, setModo] = useState<Modo>('entrar');
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
@@ -170,6 +172,13 @@ export function Portal({ onEntrar, onInvitado }: Props) {
         <p className="portal-tenue">
           Si ya tienes cuenta en otra aplicación de este espacio de trabajo, entra
           con las mismas credenciales.
+        </p>
+
+        <p className="portal-tenue">
+          El video de la cámara no sale de tu dispositivo.{' '}
+          <button className="enlace" onClick={onDatos}>
+            Manejo de datos
+          </button>
         </p>
       </div>
     </div>

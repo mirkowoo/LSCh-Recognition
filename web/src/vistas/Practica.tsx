@@ -65,8 +65,19 @@ export function Practica({
   umbral = UMBRAL_POR_DEFECTO,
   contexto,
 }: Props) {
-  const letraElRef = useRef<HTMLDivElement>(null);
-  const aroElRef = useRef<SVGCircleElement>(null);
+  // El aro y la letra se montan DOS VECES: sobre el video en pantallas angostas
+  // y en el panel lateral desde 980 px. El CSS deja visible una sola copia —
+  // cual, depende del ancho — pero ambas viven en el DOM, asi que la animacion
+  // escribe en las dos. Dos refs por pieza en vez de una lista: son exactamente
+  // dos sitios, conocidos, y asi no hay que registrar ni dar de baja nodos.
+  //
+  // Se montan las dos a la vez, en lugar de renderizar solo la que toca, para
+  // no remontar el arbol al cambiar de tamano: eso reiniciaria la camara y el
+  // motor a mitad de practica.
+  const letraCamaraRef = useRef<HTMLDivElement>(null);
+  const letraPanelRef = useRef<HTMLDivElement>(null);
+  const aroCamaraRef = useRef<SVGCircleElement>(null);
+  const aroPanelRef = useRef<SVGCircleElement>(null);
 
   // Todo el estado del bucle vive en refs: cambia 12 veces por segundo y no
   // debe provocar re-render.
@@ -174,17 +185,19 @@ export function Practica({
       if (!vivo) return;
       requestAnimationFrame(tick);
       const p = progresoRef.current;
-      if (letraElRef.current) {
-        // Rojo (0) -> verde (120) en HSL: una interpolacion de tono, no de RGB,
-        // asi el camino pasa por naranjo y amarillo en vez de por gris.
-        letraElRef.current.style.color = `hsl(${p * 120}, 78%, 58%)`;
-        letraElRef.current.style.transform = `scale(${1 + p * 0.08})`;
+      // Rojo (0) -> verde (120) en HSL: una interpolacion de tono, no de RGB,
+      // asi el camino pasa por naranjo y amarillo en vez de por gris.
+      const color = `hsl(${p * 120}, 78%, 58%)`;
+
+      for (const el of [letraCamaraRef.current, letraPanelRef.current]) {
+        if (!el) continue;
+        el.style.color = color;
+        el.style.transform = `scale(${1 + p * 0.08})`;
       }
-      if (aroElRef.current) {
-        aroElRef.current.style.strokeDashoffset = String(
-          CIRCUNFERENCIA * (1 - p),
-        );
-        aroElRef.current.style.stroke = `hsl(${p * 120}, 78%, 58%)`;
+      for (const el of [aroCamaraRef.current, aroPanelRef.current]) {
+        if (!el) continue;
+        el.style.strokeDashoffset = String(CIRCUNFERENCIA * (1 - p));
+        el.style.stroke = color;
       }
     };
     const h = requestAnimationFrame(tick);
@@ -208,8 +221,50 @@ export function Practica({
     logrado: mensaje ?? 'Logrado',
   };
 
+  // Las dos piezas que cambian de sitio segun el ancho. `donde` no decide nada
+  // por si mismo: solo marca la copia para que el CSS sepa cual mostrar.
+  const aro = (donde: 'camara' | 'panel') => (
+    <div className={`practica-aro en-${donde}`}>
+      <svg viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="54" className="aro-fondo" />
+        <circle
+          ref={donde === 'camara' ? aroCamaraRef : aroPanelRef}
+          cx="60"
+          cy="60"
+          r="54"
+          className="aro-progreso"
+          style={{
+            strokeDasharray: 2 * Math.PI * 54,
+            strokeDashoffset: 2 * Math.PI * 54,
+          }}
+        />
+      </svg>
+      <div
+        ref={donde === 'camara' ? letraCamaraRef : letraPanelRef}
+        className="practica-letra"
+      >
+        {letra}
+      </div>
+    </div>
+  );
+
+  const referencia = (donde: 'camara' | 'panel') => (
+    <figure className={`practica-referencia en-${donde}`}>
+      <img
+        src={`/img/letras/${letra}.png`}
+        alt={`Cómo se hace la letra ${letra}`}
+        width={160}
+        height={200}
+        loading="eager"
+      />
+      <figcaption>Así se hace</figcaption>
+    </figure>
+  );
+
   return (
-    <div className="practica">
+    // La situacion viaja en el className de la raiz: el borde de la camara es
+    // el semaforo, y esta tres niveles mas abajo en el arbol.
+    <div className={`practica sit-${situacion}`}>
       {/* La camara y su pie van envueltos: `.practica` es una grilla de dos
           columnas y cualquier hijo directo extra se lleva una celda. Sin este
           contenedor el aviso ocupaba la columna del panel. */}
@@ -223,6 +278,12 @@ export function Practica({
               </button>
             </div>
           )}
+
+          {/* Solo en pantallas angostas: apiladas bajo el video quedarian
+              fuera de pantalla justo cuando hacen falta. Desde 980 px el CSS
+              esconde estas y muestra las del panel. */}
+          {aro('camara')}
+          {referencia('camara')}
         </div>
 
         <p className="practica-consejo">
@@ -233,36 +294,10 @@ export function Practica({
       <div className="practica-panel">
         {contexto && <div className="practica-contexto">{contexto}</div>}
 
-        <figure className="practica-referencia">
-          <img
-            src={`/img/letras/${letra}.png`}
-            alt={`Cómo se hace la letra ${letra}`}
-            width={160}
-            height={200}
-            loading="eager"
-          />
-          <figcaption>Así se hace</figcaption>
-        </figure>
-
-        <div className="practica-aro">
-          <svg viewBox="0 0 120 120" width="180" height="180">
-            <circle cx="60" cy="60" r="54" className="aro-fondo" />
-            <circle
-              ref={aroElRef}
-              cx="60"
-              cy="60"
-              r="54"
-              className="aro-progreso"
-              style={{
-                strokeDasharray: 2 * Math.PI * 54,
-                strokeDashoffset: 2 * Math.PI * 54,
-              }}
-            />
-          </svg>
-          <div ref={letraElRef} className="practica-letra">
-            {letra}
-          </div>
-        </div>
+        {/* En escritorio el panel es el sitio del aro y la referencia: hay
+            ancho de sobra al lado de la camara y no hay que taparla. */}
+        {referencia('panel')}
+        {aro('panel')}
 
         <div className={`practica-estado est-${situacion}`}>
           {textoSituacion[situacion]}

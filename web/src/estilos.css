@@ -1,232 +1,1147 @@
+/* =============================================================================
+   LSCh — piel "terminal"
+   =============================================================================
+
+   Misma familia visual que el portafolio (css/terminal.v1.css de ese repo): las
+   dos aplicaciones comparten cuenta, asi que pasar de una a otra no deberia
+   sentirse como cambiar de sitio. Mismos tokens, misma tipografia, mismos
+   gestos — el marco de esquina, el rotulo //_nombre_, la regla que se desvanece.
+
+   Aca si se puede editar el archivo: Vite pone hash en el bundle. El problema
+   de cache inmutable que obliga a versionar nombres es del CDN del portafolio.
+
+   ESCRITA MOVIL PRIMERO. Sin media query = telefono.
+   ============================================================================= */
+
 :root {
-  --fondo: #0f1115;
-  --panel: #181b22;
-  --borde: #2a2f3a;
-  --texto: #e6e8ee;
-  --tenue: #8b93a7;
-  --ok: #34d399;
-  --mal: #f87171;
-  --acento: #60a5fa;
-  color-scheme: dark;
+    --fondo:         #06070a;
+    --fondo-alto:    #0a0d12;
+    --panel:         #0c0f14;
+    --panel-vivo:    #11161d;
+
+    --linea:         #1e2530;
+    --linea-tenue:   #151a22;
+    --linea-viva:    #2c3644;
+
+    --tinta:         #cfd6de;
+    --tinta-alta:    #e7ecf2;
+    --tinta-max:     #ffffff;
+    --tenue:         #7f8b9b;
+    --tenue-max:     #4d5766;
+
+    --alarma:        #e63c33;
+    --alarma-fondo:  #170c0b;
+    --alarma-linea:  #43201d;
+    --cian:          #48e0c8;
+    --cian-fondo:    #0b1310;
+    --cian-linea:    #1f4437;
+    --ambar:         #e5b84a;
+    --ambar-fondo:   #0e0b06;
+    --ambar-linea:   #201a10;
+    --verde:         #34d399;
+
+    --mono: 'Share Tech Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --lectura: 'Share Tech', 'Share Tech Mono', system-ui, sans-serif;
+
+    color-scheme: dark;
 }
+
 * { box-sizing: border-box; }
+
 body {
-  margin: 0;
-  background: var(--fondo);
-  color: var(--texto);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0;
+    background:
+        radial-gradient(760px 440px at 50% -8%, #101a1e 0%, rgba(6, 7, 10, 0) 62%),
+        var(--fondo);
+    background-attachment: fixed;
+    color: var(--tinta);
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
 }
-.envoltorio { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
-h1 { font-size: 20px; margin: 0 0 4px; }
-.sub { color: var(--tenue); font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+
+/* Lineas de escaneo. Fijas, sobre todo, sin capturar clics. */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    background: repeating-linear-gradient(180deg,
+        rgba(170, 210, 255, .035) 0 1px, transparent 1px 3px);
+}
+
+h1, h2, h3 { margin: 0; font-weight: 400; }
+b, strong { font-weight: 400; color: var(--tinta-alta); }
+
+::selection { background: var(--cian); color: var(--fondo); }
+:focus-visible { outline: 2px solid var(--cian); outline-offset: 2px; }
+
+* { scrollbar-color: var(--linea-viva) transparent; scrollbar-width: thin; }
+
+/* En telefono la CAMARA VA PRIMERO. Con la rejilla de 26 letras arriba, el
+   video empezaba a 489 px del borde: en una pantalla de 812 px eso es media
+   pantalla de scroll antes de poder practicar. Eliges la letra una vez; la
+   camara la miras todo el rato. En escritorio hay sitio para ambas cosas y se
+   respeta el orden del documento. */
+.envoltorio {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 14px 48px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cabecera { order: 0; }
+.practica { order: 1; }
+.barra { order: 2; margin: 14px 0 0; }
+
+/* Marco de esquina: el gesto que convierte un rectangulo en panel tecnico. */
+.panel,
+.barra,
+.practica-panel,
+.portal-caja,
+.resultado-nota,
+.progreso-abecedario {
+    position: relative;
+    background: var(--fondo-alto);
+    border: 1px solid var(--linea);
+}
+
+.panel::before, .panel::after,
+.barra::before, .barra::after,
+.practica-panel::before, .practica-panel::after,
+.portal-caja::before, .portal-caja::after,
+.resultado-nota::before, .resultado-nota::after,
+.progreso-abecedario::before, .progreso-abecedario::after {
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+}
+
+.panel::before, .barra::before, .practica-panel::before,
+.portal-caja::before, .resultado-nota::before, .progreso-abecedario::before {
+    top: -1px; left: -1px;
+    border-top: 1px solid var(--linea-viva);
+    border-left: 1px solid var(--linea-viva);
+}
+
+.panel::after, .barra::after, .practica-panel::after,
+.portal-caja::after, .resultado-nota::after, .progreso-abecedario::after {
+    bottom: -1px; right: -1px;
+    border-bottom: 1px solid var(--linea-viva);
+    border-right: 1px solid var(--linea-viva);
+}
+
+/* ------------------------------------------------------------- CONTROLES */
+
+button, select, input {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--tinta);
+    background: transparent;
+    border: 1px solid var(--linea-viva);
+    padding: 13px 18px;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) { border-color: var(--cian); color: var(--cian); }
+button:disabled { opacity: .35; cursor: default; }
+
+input {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 15px;
+    background: var(--panel-vivo);
+    cursor: text;
+}
+
+input:focus { outline: none; border-color: var(--cian); }
+
+button.primario {
+    background: var(--cian);
+    border-color: var(--cian);
+    color: var(--fondo);
+}
+
+button.primario:hover:not(:disabled) { background: #6cf0da; color: var(--fondo); }
+button.secundario { width: 100%; }
+
+/* --------------------------------------------------------------- CABECERA */
+
+.cabecera {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 -14px 18px;
+    padding: 10px 14px;
+    background: rgba(8, 10, 14, .94);
+    border-bottom: 1px solid var(--linea);
+    position: sticky;
+    top: 0;
+    z-index: 80;
+}
+
+/* La marca la pinta el CSS: no hay logo que cargar y el nombre de la app ya
+   esta en el <title>. */
+.cabecera::before {
+    content: 'LSCh';
+    font-size: 12px;
+    letter-spacing: .3em;
+    color: var(--tinta-alta);
+    padding-right: 12px;
+    border-right: 1px solid var(--linea);
+}
+
+.nav {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    order: 3;
+    flex: 1 0 100%;
+    margin: 0 -14px -10px;
+    padding: 0 14px;
+    border-top: 1px solid var(--linea);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar { display: none; }
+
+/* Pestanas con el canto cortado, como en el portafolio. */
+.nav button {
+    background: var(--panel-vivo);
+    border: 0;
+    color: var(--tenue);
+    padding: 15px 30px 14px 15px;
+    font-size: 11px;
+    letter-spacing: .18em;
+    white-space: nowrap;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+
+.nav button:hover:not(:disabled) { color: var(--tinta); border: 0; }
+
+.nav button.activo {
+    background: #dfe6ee;
+    color: var(--fondo);
+}
+
+.cabecera-sesion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* ---------------------------------------------------------- MENU DE USUARIO */
+
+.menu-usuario { position: relative; }
+
+.menu-usuario > button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel);
+    border: 1px solid var(--linea-viva);
+    padding: 5px 10px 5px 5px;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: none;
+    min-height: 38px;
+}
+
+.menu-usuario-avatar {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    background: #1b222c;
+    color: var(--cian);
+    font-size: 12px;
+    object-fit: cover;
+}
+
+.menu-usuario-lista {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 200px;
+    background: var(--fondo-alto);
+    border: 1px solid var(--linea-viva);
+    padding: 5px;
+    z-index: 90;
+}
+
+.menu-usuario-lista button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    padding: 13px 11px;
+    font-size: 11px;
+}
+
+.menu-usuario-lista button:hover { background: var(--panel-vivo); color: var(--cian); border: 0; }
+
+.menu-usuario-correo {
+    padding: 9px 11px;
+    font-size: 11px;
+    color: var(--tenue-max);
+    word-break: break-all;
+}
+
+.menu-usuario-lista .separador { height: 1px; background: var(--linea); margin: 4px 0; }
+
+/* --------------------------------------------------- BARRA DE LETRA OBJETIVO */
+
 .barra {
-  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
-  background: var(--panel); border: 1px solid var(--borde);
-  border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
 }
-.barra label { font-size: 13px; color: var(--tenue); display: flex; gap: 8px; align-items: center; }
-select, button {
-  background: #232833; color: var(--texto); border: 1px solid var(--borde);
-  border-radius: 6px; padding: 6px 12px; font-size: 14px; font-family: inherit;
+
+.barra-titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 11px;
+    letter-spacing: .26em;
+    color: var(--ambar);
 }
-button { cursor: pointer; }
-button:hover:not(:disabled) { border-color: var(--acento); }
-button:disabled { opacity: .45; cursor: default; }
-input[type=range] { width: 130px; accent-color: var(--acento); }
 
-.principal { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-@media (max-width: 820px) { .principal { grid-template-columns: 1fr; } }
-
-video { width: 100%; border-radius: 10px; background: #000; transform: scaleX(-1); display: block; }
-
-.tarjetas { display: flex; flex-direction: column; gap: 12px; }
-.tarjeta {
-  background: var(--panel); border: 1px solid var(--borde);
-  border-radius: 10px; padding: 12px; display: grid;
-  grid-template-columns: 96px 1fr; gap: 12px; align-items: center;
+.barra-titulo::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--linea-tenue);
 }
-.tarjeta.gana { border-color: var(--ok); }
-.tarjeta canvas { width: 96px; height: 96px; border-radius: 6px; background: #000; display: block; }
-.nombre { font-size: 12px; color: var(--tenue); text-transform: uppercase; letter-spacing: .5px; }
-.letra { font-size: 34px; font-weight: 700; line-height: 1.1; }
-.letra.nada { color: var(--tenue); font-size: 15px; font-weight: 400; }
-.detalle { font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; }
-.medidor { height: 4px; background: #2a2f3a; border-radius: 2px; overflow: hidden; margin-top: 6px; }
-.medidor i { display: block; height: 100%; background: var(--acento); }
 
-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 13px; }
-th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--borde); font-variant-numeric: tabular-nums; }
-th:first-child, td:first-child { text-align: left; }
-th { color: var(--tenue); font-weight: 500; }
-tr.lider td { color: var(--ok); }
-.pie { color: var(--tenue); font-size: 12px; margin-top: 20px; line-height: 1.6; }
-.error { background: #3b1d1d; border: 1px solid #7f2d2d; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+/* Rejilla de letras. Reemplaza al <select>: en el telefono un desplegable
+   nativo tapa la camara entera, y aca el objetivo se elige de un toque. */
+.letras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
 
-/* --- navegacion --- */
-.nav { display: flex; gap: 8px; margin-bottom: 20px; }
-.nav button { background: transparent; border-color: transparent; color: var(--tenue); }
-.nav button.activo { background: var(--panel); border-color: var(--borde); color: var(--texto); }
+.letra-chip {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    font-size: 16px;
+    letter-spacing: 0;
+    background: #0d1117;
+    border: 1px solid #232a34;
+    color: var(--tenue);
+}
 
-/* --- practica --- */
-.practica { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
-@media (max-width: 860px) { .practica { grid-template-columns: 1fr; } }
+.letra-chip:hover:not(:disabled) { border-color: var(--cian); color: var(--cian); }
 
-.practica-camara { position: relative; }
+.letra-chip.activo {
+    border-color: var(--cian);
+    background: var(--cian-fondo);
+    color: var(--cian);
+}
+
+/* Las de movimiento no se evaluan: se muestran, atenuadas, para que el
+   abecedario se vea completo. */
+.letra-chip:disabled { opacity: .4; }
+
+.detalle {
+    font-size: 12px;
+    color: var(--tenue);
+    font-variant-numeric: tabular-nums;
+    font-family: var(--lectura);
+}
+
+/* -------------------------------------------------------------- PRACTICA */
+
+.practica {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: start;
+}
+
+.practica-izquierda { display: flex; flex-direction: column; gap: 10px; }
+
+/* El video se recorta al cuadrado central: es exactamente la region que el
+   modelo recibe. Mostrar el 16:9 completo haria que la gente encuadre la mano
+   contra un marco que el modelo no ve. */
+.practica-camara {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    aspect-ratio: 1;
+    background: #090b0f;
+    border: 1px solid var(--linea-viva);
+    overflow: hidden;
+    transition: border-color 140ms linear;
+}
+
+.practica-camara video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1);
+    background: #000;
+}
+
+/* El borde de la camara ES el semaforo. La clase la pone Practica.tsx sobre
+   .practica segun la situacion, asi que el estado se ve sin apartar la vista
+   del video — que es lo unico que se puede mirar mientras sostienes la sena. */
+.practica.sit-sinMano   .practica-camara { border-color: var(--linea-viva); }
+.practica.sit-otraLetra .practica-camara { border-color: var(--alarma); }
+.practica.sit-correcta  .practica-camara { border-color: var(--ambar); }
+.practica.sit-logrado   .practica-camara { border-color: var(--verde); }
+
+.practica-camara::after {
+    content: 'LO QUE VE EL MODELO · 1:1';
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    background: rgba(6, 7, 10, .78);
+    padding: 4px 9px;
+    font-size: 9px;
+    letter-spacing: .14em;
+    color: var(--tenue);
+    pointer-events: none;
+}
+
 .practica-overlay {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  background: rgba(0,0,0,.6); border-radius: 10px;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(6, 7, 10, .72);
+    z-index: 3;
+}
+
+.practica-consejo {
+    margin: 0;
+    font-family: var(--lectura);
+    font-size: 12px;
+    color: var(--tenue);
+    text-align: center;
+}
+
+/* ---- El aro y la referencia cambian de sitio segun el ancho ----
+   En pantalla angosta van ENCIMA del video: apilar camara + aro + referencia +
+   estado + acciones deja el aro fuera de pantalla justo cuando hay que mirarlo.
+   Desde 980 px hay ancho de sobra al lado de la camara, asi que se van al panel
+   y el video queda limpio — que es como se diseno en escritorio.
+
+   Las dos copias existen en el DOM (ver Practica.tsx); aca se decide cual se ve. */
+
+.practica-aro.en-panel,
+.practica-referencia.en-panel { display: none; }
+
+.practica-aro {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    width: 118px;
+    height: 118px;
+    z-index: 2;
+    background: rgba(6, 7, 10, .55);
+}
+
+.practica-aro svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.aro-fondo { fill: none; stroke: #1a212a; stroke-width: 8; }
+.aro-progreso { fill: none; stroke-width: 8; stroke-linecap: round; }
+
+.practica-letra {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 52px;
+    color: hsl(0, 78%, 58%);
+    transition: none; /* la anima requestAnimationFrame, no CSS */
+}
+
+.practica-referencia {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 96px;
+    margin: 0;
+    z-index: 2;
+}
+
+.practica-referencia img {
+    display: block;
+    width: 100%;
+    height: 112px;
+    /* contain, no cover: los PNG tienen proporciones distintas entre si
+       (219x219 la A, 233x304 la Q) y recortarlos cortaria dedos. */
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid var(--linea-viva);
+    padding: 5px;
+}
+
+.practica-referencia figcaption {
+    background: rgba(6, 7, 10, .8);
+    padding: 3px 0;
+    text-align: center;
+    font-size: 8px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--tenue);
 }
 
 .practica-panel {
-  background: var(--panel); border: 1px solid var(--borde);
-  border-radius: 10px; padding: 20px; text-align: center;
-}
-.practica-contexto { color: var(--tenue); font-size: 13px; margin-bottom: 12px; }
-
-.practica-aro { position: relative; width: 180px; height: 180px; margin: 0 auto 16px; }
-.practica-aro svg { transform: rotate(-90deg); }
-.aro-fondo { fill: none; stroke: #2a2f3a; stroke-width: 8; }
-.aro-progreso { fill: none; stroke-width: 8; stroke-linecap: round; }
-.practica-letra {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  font-size: 76px; font-weight: 700; color: hsl(0,78%,58%);
-  transition: none; /* la anima requestAnimationFrame, no CSS */
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
 }
 
-.practica-estado { font-size: 16px; font-weight: 600; min-height: 24px; }
-.est-sinMano { color: var(--tenue); }
-.est-otraLetra { color: var(--mal); }
-.est-correcta { color: var(--acento); }
-.est-logrado { color: var(--ok); }
-.practica-detalle { color: var(--tenue); font-size: 12px; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.practica-aviso { color: var(--tenue); font-size: 14px; line-height: 1.5; }
-.practica-acciones { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+.practica-contexto {
+    font-size: 10px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ambar);
+}
 
-/* --- progreso del abecedario --- */
-.progreso-abecedario { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 18px; }
+.practica-estado {
+    font-size: 17px;
+    letter-spacing: .04em;
+    min-height: 24px;
+}
+
+.est-esperando { color: var(--tenue); }
+.est-sinMano   { color: var(--tenue); }
+.est-otraLetra { color: var(--alarma); }
+.est-correcta  { color: var(--ambar); }
+.est-logrado   { color: var(--verde); }
+
+.practica-detalle {
+    font-size: 11px;
+    letter-spacing: .06em;
+    color: var(--tenue-max);
+    font-variant-numeric: tabular-nums;
+}
+
+.practica-aviso {
+    font-family: var(--lectura);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--tenue);
+}
+
+.practica-acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.practica-acciones button { flex: 1; }
+
+/* --------------------------------------------------- PROGRESO Y EVALUACION */
+
+.progreso-abecedario {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
 .chip {
-  width: 26px; height: 26px; display: grid; place-items: center;
-  border-radius: 5px; font-size: 12px; font-weight: 600;
-  background: #232833; color: var(--tenue); border: 1px solid transparent;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    background: #0d1117;
+    border: 1px solid #232a34;
+    color: var(--tenue-max);
 }
-.chip.actual { border-color: var(--acento); color: var(--texto); }
-.chip.lograda { background: #14532d; color: var(--ok); }
-.chip.fallada { background: #4c1d24; color: var(--mal); }
-.chip.dinamica { opacity: .4; }
 
-/* --- resultado --- */
-.resultado h2 { font-size: 18px; margin: 0 0 16px; }
-.resultado h3 { font-size: 14px; color: var(--tenue); margin: 28px 0 0; font-weight: 500; }
+.chip.actual   { border-color: var(--ambar); background: #151107; color: var(--ambar); }
+.chip.lograda  { border-color: var(--cian-linea); background: var(--cian-fondo); color: var(--verde); }
+.chip.fallada  { border-color: var(--alarma-linea); background: var(--alarma-fondo); color: var(--alarma); }
+.chip.dinamica { opacity: .35; }
+
+/* --------------------------------------------------------------- RESULTADO */
+
+.resultado h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    font-size: 11px;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--alarma);
+    margin-bottom: 14px;
+}
+
+.resultado h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--linea-viva), rgba(44, 54, 68, 0));
+}
+
+.resultado h3 {
+    font-size: 11px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--tenue);
+    margin: 28px 0 12px;
+}
+
 .resultado-nota {
-  display: flex; gap: 24px; align-items: center;
-  background: var(--panel); border: 1px solid var(--borde);
-  border-radius: 10px; padding: 24px;
-}
-.nota-numero { font-size: 64px; font-weight: 700; color: var(--ok); line-height: 1; }
-.nota-detalle { font-size: 14px; line-height: 1.7; }
-.tenue { color: var(--tenue); font-size: 12px; }
-
-/* El video se recorta al cuadrado central: object-fit cover sobre un contenedor
-   1:1 con fuente 16:9 recorta los lados por igual — exactamente lo mismo que
-   hace `encuadrar()` en modo recorte. Lo que ves es lo que el modelo recibe. */
-.practica-camara {
-  /* width definido: como bloque normal se estira hasta max-width. Antes esto
-     era hijo directo de la grilla y `margin: 0 auto` lo hacia ajustarse al
-     contenido, colapsando a 300px. */
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-  aspect-ratio: 1;
-}
-.practica-camara video { width: 100%; height: 100%; object-fit: cover; }
-.practica-camara::after {
-  content: 'lo que ve el modelo';
-  position: absolute; left: 10px; bottom: 10px;
-  font-size: 11px; color: var(--tenue);
-  background: rgba(0,0,0,.55); padding: 3px 7px; border-radius: 4px;
-  pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 18px;
+    border-color: var(--cian-linea);
+    background: linear-gradient(180deg, var(--cian-fondo) 0%, var(--fondo-alto) 70%);
+    text-align: center;
 }
 
-/* --- cabecera con sesion --- */
-.cabecera { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-.cabecera .nav { margin-bottom: 0; }
-.cabecera-sesion { display: flex; align-items: center; gap: 10px; }
+.nota-numero {
+    font-size: 76px;
+    color: var(--verde);
+    line-height: 1;
+}
 
-/* --- portal --- */
-.portal { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; padding-top: 24px; }
-@media (max-width: 880px) { .portal { grid-template-columns: 1fr; gap: 28px; } }
+.nota-detalle {
+    font-family: var(--lectura);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--tenue);
+}
 
-.portal-intro h1 { font-size: 30px; line-height: 1.2; margin: 0 0 16px; }
-.portal-intro p { color: var(--tenue); line-height: 1.6; font-size: 15px; }
-.portal-intro b { color: var(--texto); font-weight: 600; }
-.portal-puntos { color: var(--tenue); font-size: 15px; line-height: 1.9; padding-left: 20px; margin: 20px 0; }
+.tenue { color: var(--tenue-max); font-size: 12px; }
+
+/* La tabla se apila en filas en el telefono: cinco columnas numericas a 375 px
+   no se leen. Cada celda lleva su rotulo en ::before. */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+thead { display: none; }
+
+tbody tr {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 2px 12px;
+    background: var(--fondo-alto);
+    border: 1px solid var(--linea);
+    padding: 10px 12px;
+    margin-bottom: 7px;
+}
+
+tbody td {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--tinta);
+}
+
+tbody td::before {
+    content: attr(data-rotulo);
+    font-size: 9px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--tenue-max);
+}
+
+/* La primera celda es la letra: ocupa la columna angosta, sin rotulo. */
+tbody td:first-child {
+    grid-row: span 4;
+    align-self: center;
+    justify-content: center;
+    font-size: 26px;
+    color: var(--tinta-alta);
+}
+
+tbody td:first-child::before { content: none; }
+
+tr.lider td { color: var(--verde); }
+
+.pie {
+    font-family: var(--lectura);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--tenue);
+    margin: 18px 0 0;
+    max-width: 68ch;
+}
+
+.guardado { margin-top: 14px; min-height: 20px; }
+
+/* ------------------------------------------------------------ MENSAJERIA */
+
+.error {
+    background: var(--alarma-fondo);
+    border: 1px solid var(--alarma-linea);
+    border-left-width: 2px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #f0a19b;
+    margin-bottom: 14px;
+}
+
+.aviso {
+    background: var(--cian-fondo);
+    border: 1px solid var(--cian-linea);
+    border-left-width: 2px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--verde);
+}
+
+/* ----------------------------------------------------------------- PORTAL */
+
+.portal {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding-top: 20px;
+}
+
+.portal-intro h1 {
+    font-size: clamp(28px, 8vw, 44px);
+    line-height: 1.12;
+    color: var(--tinta-max);
+    margin-bottom: 16px;
+    text-wrap: pretty;
+}
+
+.portal-intro p {
+    font-family: var(--lectura);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--tenue);
+    text-wrap: pretty;
+}
+
+.portal-puntos {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 20px 0;
+    padding: 0;
+    background: var(--fondo-alto);
+    border: 1px solid var(--linea);
+}
+
+.portal-puntos li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--linea-tenue);
+    font-family: var(--lectura);
+    font-size: 14px;
+    color: var(--tinta);
+}
+
+.portal-puntos li:last-child { border-bottom: 0; }
+
+/* Marca de verificacion dibujada, no emoji: escala con el texto y toma el
+   color del tema. */
+.portal-puntos li::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    background: var(--cian);
+    clip-path: polygon(14% 44%, 0 58%, 38% 96%, 100% 22%, 86% 8%, 38% 68%);
+}
+
+/* El aviso de los limites del modelo: es lo que evita que alguien se rompa la
+   cabeza con una letra que el modelo no puede juzgar. */
 .portal-nota {
-  font-size: 13px !important; border-left: 2px solid var(--borde);
-  padding-left: 14px; margin-top: 24px;
+    font-size: 13px !important;
+    border: 1px solid var(--alarma-linea);
+    border-left-width: 2px;
+    background: var(--alarma-fondo);
+    padding: 14px 16px;
+    margin-top: 24px;
 }
 
-.portal-caja { background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; padding: 24px; }
-.portal-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
-.portal-tabs button { flex: 1; background: transparent; border-color: transparent; color: var(--tenue); }
-.portal-tabs button.activo { background: #232833; border-color: var(--borde); color: var(--texto); }
+.portal-caja { padding: 20px 16px; }
+
+.portal-tabs { display: flex; gap: 3px; margin-bottom: 18px; }
+
+.portal-tabs button {
+    flex: 1;
+    background: transparent;
+    border-color: var(--linea);
+    color: var(--tenue);
+    padding: 13px 0;
+    font-size: 11px;
+}
+
+.portal-tabs button.activo {
+    background: #dfe6ee;
+    border-color: #dfe6ee;
+    color: var(--fondo);
+}
 
 .portal-caja form { display: flex; flex-direction: column; gap: 14px; }
-.portal-caja label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--tenue); }
-.portal-caja input {
-  background: #232833; color: var(--texto); border: 1px solid var(--borde);
-  border-radius: 6px; padding: 9px 12px; font-size: 14px; font-family: inherit;
-}
-.portal-caja input:focus { outline: none; border-color: var(--acento); }
-button.primario { background: var(--acento); color: #0b1220; border-color: var(--acento); font-weight: 600; padding: 10px; }
-button.primario:hover:not(:disabled) { filter: brightness(1.08); }
-button.secundario { width: 100%; padding: 10px; }
 
-.portal-separador { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; color: var(--tenue); font-size: 12px; }
-.portal-separador::before, .portal-separador::after { content: ''; flex: 1; height: 1px; background: var(--borde); }
-.portal-tenue { color: var(--tenue); font-size: 12px; line-height: 1.6; margin: 12px 0 0; }
-.aviso { background: #14332a; border: 1px solid #1f6f52; padding: 10px 14px; border-radius: 8px; font-size: 13px; color: var(--ok); }
-.guardado { margin-top: 16px; min-height: 20px; }
-
-/* --- referencia visual de la letra --- */
-.practica-referencia { margin: 0 0 16px; }
-.practica-referencia img {
-  width: 100%; max-width: 160px; height: 200px;
-  /* contain, no cover: los PNG tienen proporciones distintas entre si
-     (219x219 la A, 233x304 la Q) y recortarlos cortaria dedos. */
-  object-fit: contain;
-  background: #fff; border-radius: 8px; padding: 6px; display: block; margin: 0 auto;
-}
-.practica-referencia figcaption {
-  color: var(--tenue); font-size: 11px; text-transform: uppercase;
-  letter-spacing: .5px; margin-top: 6px;
-}
-.practica-consejo {
-  color: var(--tenue); font-size: 12px; text-align: center;
-  margin: 10px 0 0; max-width: 520px; margin-inline: auto;
+.portal-caja label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--tenue);
 }
 
-/* --- menu de usuario --- */
-.menu-usuario { position: relative; }
-.menu-usuario > button { display: flex; align-items: center; gap: 8px; }
-.menu-usuario-avatar {
-  width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
-  background: #2a2f3a; display: grid; place-items: center;
-  font-size: 11px; font-weight: 700; color: var(--texto); flex: none;
+.portal-separador {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0 14px;
+    color: var(--tenue-max);
+    font-size: 10px;
+    letter-spacing: .2em;
 }
-.menu-usuario-lista {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
-  min-width: 190px; background: var(--panel);
-  border: 1px solid var(--borde); border-radius: 8px; padding: 4px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+
+.portal-separador::before,
+.portal-separador::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--linea);
 }
-.menu-usuario-lista button {
-  display: flex; align-items: center; gap: 8px; width: 100%;
-  background: transparent; border: none; text-align: left;
-  padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--texto);
+
+.portal-tenue {
+    font-family: var(--lectura);
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--tenue);
+    margin: 12px 0 0;
 }
-.menu-usuario-lista button:hover { background: #232833; }
-.menu-usuario-lista .separador { height: 1px; background: var(--borde); margin: 4px 0; }
-.menu-usuario-correo {
-  padding: 8px 10px 6px; font-size: 11px; color: var(--tenue);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+
+
+/* ---------------------------------------------------------- MANEJO DE DATOS */
+
+/* Enlace con forma de boton: esta app no tiene rutas, asi que navegar es
+   cambiar de estado. Debe LEERSE como enlace igual. */
+.enlace {
+    background: none;
+    border: 0;
+    padding: 0;
+    min-height: 0;
+    color: var(--cian);
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-transform: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.enlace:hover { color: #9af0e4; border: 0; }
+
+.pie-sitio {
+    margin-top: 34px;
+    padding-top: 8px;
+    border-top: 1px solid var(--linea-tenue);
+    text-align: center;
+}
+
+.pie-sitio .enlace {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 12px;
+    letter-spacing: .14em;
+}
+
+.datos { max-width: 72ch; margin: 0 auto; padding: 8px 0 24px; }
+
+.datos-volver {
+    background: transparent;
+    border: 0;
+    padding: 10px 0;
+    margin-bottom: 10px;
+    font-size: 11px;
+    letter-spacing: .2em;
+    color: var(--cian);
+}
+
+.datos-volver:hover { border: 0; color: #9af0e4; }
+
+.datos-intro h1 {
+    font-size: clamp(26px, 7vw, 32px);
+    color: var(--tinta-max);
+    line-height: 1.2;
+}
+
+.datos-fecha {
+    margin: 10px 0 0;
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--tenue-max);
+}
+
+.datos-entrada {
+    margin: 16px 0 0;
+    font-family: var(--lectura);
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--tenue);
+    text-wrap: pretty;
+}
+
+.datos-bloque { margin-top: 30px; }
+
+.datos-titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    font-size: 11px;
+    letter-spacing: .26em;
+    color: var(--alarma);
+    margin-bottom: 12px;
+}
+
+.datos-titulo::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--linea-viva), rgba(44, 54, 68, 0));
+}
+
+.datos-bloque p,
+.datos-bloque li {
+    margin: 0;
+    font-family: var(--lectura);
+    font-size: 15px;
+    line-height: 1.75;
+    color: #9aa5b4;
+    text-wrap: pretty;
+}
+
+.datos-bloque p + p { margin-top: 14px; }
+.datos-bloque ul { margin: 14px 0 0; padding-left: 20px; }
+.datos-bloque li + li { margin-top: 10px; }
+.datos-bloque b { color: var(--tinta-alta); }
+
+/* ------------------------------------------------------- AVISO DE SESION */
+
+/* Ambar cuando esta por vencer, rojo cuando ya vencio. Va en el flujo, no
+   flotando: aparece bajo la cabecera y empuja el contenido, que es lo que hace
+   que se lea. Un toast se lo pierde quien esta mirando la camara. */
+.aviso-sesion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--ambar-linea);
+    border-left-width: 2px;
+    background: var(--ambar-fondo);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+
+.aviso-sesion.es-vencida {
+    border-color: var(--alarma-linea);
+    background: var(--alarma-fondo);
+}
+
+.aviso-sesion-linea {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.aviso-sesion-marca {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    background: var(--ambar);
+}
+
+.es-vencida .aviso-sesion-marca { background: var(--alarma); }
+
+.aviso-sesion-texto {
+    flex: 1 1 240px;
+    font-family: var(--lectura);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--tenue);
+}
+
+.aviso-sesion-texto b { color: var(--ambar); }
+.es-vencida .aviso-sesion-texto b { color: var(--alarma); }
+
+.aviso-sesion-acciones {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.aviso-sesion-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-top: 1px solid var(--linea-tenue);
+    padding-top: 12px;
+}
+
+.aviso-sesion-form label {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--tenue);
+}
+
+.aviso-sesion-form input[readonly] { color: var(--tenue); }
+
+.aviso-sesion-botones {
+    flex: 1 1 100%;
+    display: flex;
+    gap: 8px;
+}
+
+.aviso-sesion-form .error { flex: 1 1 100%; margin: 0; }
+
+/* El resultado no guardado se puede reintentar sin repetir la evaluacion. */
+.guardado .error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+button.reintentar {
+    padding: 8px 14px;
+    min-height: 36px;
+    font-size: 10px;
+    margin-left: auto;
+}
+
+/* ------------------------------------------------------------ BREAKPOINTS */
+
+@media (min-width: 760px) {
+    .envoltorio { padding: 0 22px 56px; }
+
+    .practica { order: 0; }
+    .barra { order: 0; margin: 0 0 14px; }
+
+    .cabecera {
+        margin: 0 -22px 22px;
+        padding: 0 22px;
+        flex-wrap: nowrap;
+    }
+
+    .cabecera::before { padding: 14px 16px 14px 0; }
+
+    .nav {
+        order: 0;
+        flex: 0 1 auto;
+        margin: 0;
+        padding: 0 0 0 10px;
+        border-top: 0;
+        overflow-x: visible;
+    }
+
+    .portal { grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; padding-top: 28px; }
+    .portal-caja { padding: 24px; }
+
+    /* La tabla vuelve a ser tabla. */
+    thead { display: table-header-group; }
+    tbody tr { display: table-row; border: 0; padding: 0; margin: 0; background: none; }
+    tbody td { display: table-cell; text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--linea); }
+    tbody td::before { content: none; }
+    tbody td:first-child { font-size: 15px; text-align: left; }
+    th {
+        text-align: right;
+        padding: 9px 10px;
+        border-bottom: 1px solid var(--linea);
+        font-size: 10px;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--tenue-max);
+        font-weight: 400;
+    }
+    th:first-child, td:first-child { text-align: left; }
+
+    .resultado-nota { flex-direction: row; gap: 28px; text-align: left; }
+    .nota-numero { font-size: 86px; }
+}
+
+@media (min-width: 980px) {
+    .practica { grid-template-columns: minmax(0, 1fr) 340px; }
+
+    /* El video queda limpio: las copias montadas encima desaparecen. */
+    .practica-aro.en-camara,
+    .practica-referencia.en-camara { display: none; }
+
+    .practica-referencia.en-panel {
+        display: block;
+        position: static;
+        width: 168px;
+        margin: 0 auto;
+    }
+
+    .practica-referencia.en-panel img { height: 200px; }
+
+    .practica-referencia.en-panel figcaption {
+        background: none;
+        padding-top: 6px;
+    }
+
+    .practica-aro.en-panel {
+        display: block;
+        position: relative;
+        left: auto;
+        bottom: auto;
+        width: 190px;
+        height: 190px;
+        margin: 2px auto 0;
+        background: none;
+    }
+
+    .practica-aro.en-panel .practica-letra { font-size: 76px; }
+
+    .practica-panel { padding: 20px; gap: 14px; }
+    .practica-estado { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
 }

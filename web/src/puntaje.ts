@@ -45,11 +45,43 @@ export const TIEMPO_MAXIMO = 30;
  */
 export const LETRAS_DINAMICAS = ['G', 'J', 'S', 'X', 'Z'] as const;
 
+/**
+ * Confianza a partir de la cual la componente vale el maximo.
+ *
+ * Antes se normalizaba contra 1.0 — contra una confianza PERFECTA del modelo,
+ * que no ocurre nunca: un detector real ronda 0,7-0,9 en una sena bien hecha.
+ * Con ese techo, una evaluacion impecable (sena sostenida los 4 s, sin dudar,
+ * en las 21 letras) tocaba techo en 6,2 y el 7,0 era inalcanzable por
+ * construccion, no por merito.
+ *
+ * 0,65 es el punto donde el modelo ya esta claramente decidido. Pedir mas es
+ * cobrarle al usuario la inseguridad del detector, que no es asunto suyo.
+ */
+export const CONFIANZA_PLENA = 0.65;
+
 export const ABECEDARIO = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
-/** Las 21 que se evaluan y componen la nota. */
+/** Las 21 que se recorren en la evaluacion. */
 export const LETRAS_EVALUABLES = ABECEDARIO.filter(
   (l) => !LETRAS_DINAMICAS.includes(l as (typeof LETRAS_DINAMICAS)[number]),
+);
+
+/**
+ * Letras que SE PRACTICAN en la evaluacion pero NO entran en la nota.
+ *
+ * La P se mide mal: el modelo no la distingue con fiabilidad, asi que castigar
+ * a alguien por no lograrla es castigarlo por un defecto nuestro. Sacarla del
+ * recorrido tampoco corresponde — es parte del abecedario y hay que enseniarla
+ * — asi que se muestra, se puede lograr, y no pesa en el promedio.
+ *
+ * Cuando el modelo la reconozca decentemente, se saca de esta lista y vuelve a
+ * contar sin tocar nada mas.
+ */
+export const LETRAS_SIN_PUNTAJE = ['P'] as const;
+
+/** Las que componen la nota: las evaluables menos las que no puntuan. */
+export const LETRAS_PUNTUABLES = LETRAS_EVALUABLES.filter(
+  (l) => !LETRAS_SIN_PUNTAJE.includes(l as (typeof LETRAS_SIN_PUNTAJE)[number]),
 );
 
 export interface InsumosPuntaje {
@@ -72,17 +104,17 @@ const acotar = (v: number, min: number, max: number) =>
  *
  * - La estabilidad pesa mas porque es la senal mas honesta de las tres: mide si
  *   el usuario sostuvo la sena, no cuan seguro estaba el modelo.
- * - La confianza se normaliza SOBRE el umbral, no sobre cero. Rozar el umbral
- *   vale 0, no medio puntaje.
+ * - La confianza se normaliza SOBRE el umbral y contra CONFIANZA_PLENA, no
+ *   contra 1.0. Rozar el umbral vale 0, no medio puntaje; llegar a 0,65 vale
+ *   todo, porque exigir mas seria exigir una certeza que el modelo no da.
  * - La fluidez pesa poco a proposito: premia soltura sin convertir el ejercicio
  *   en una carrera, que seria pedagogicamente malo.
  */
 export function puntajeLetra(i: InsumosPuntaje): number {
-  const confNorm = acotar(
-    (i.confianzaMedia - i.umbral) / (1 - i.umbral),
-    0,
-    1,
-  );
+  // El maximo protege de un umbral configurado por encima del techo: sin el,
+  // el divisor se volveria cero o negativo.
+  const rango = Math.max(0.01, CONFIANZA_PLENA - i.umbral);
+  const confNorm = acotar((i.confianzaMedia - i.umbral) / rango, 0, 1);
   const bonusTiempo = acotar(
     (TIEMPO_MAXIMO - i.segundosHastaLogro) / (TIEMPO_MAXIMO - VENTANA_RETENCION),
     0,
@@ -105,10 +137,16 @@ export function nota(promedioPuntaje: number): number {
   return Math.round(n * 10) / 10;
 }
 
-/** Promedio sobre TODAS las letras evaluables: las no logradas cuentan como 0. */
+/**
+ * Promedio sobre TODAS las letras que puntuan: las no logradas cuentan como 0.
+ *
+ * Ojo con el denominador: son las PUNTUABLES, no las evaluables. Una letra que
+ * se practica pero no puntua no aparece ni en el numerador ni en el divisor —
+ * si estuviera solo en el divisor, no puntuar seria lo mismo que fallar.
+ */
 export function promedioSesion(
   puntajes: Record<string, number>,
-  letras: string[] = LETRAS_EVALUABLES,
+  letras: string[] = LETRAS_PUNTUABLES,
 ): number {
   if (letras.length === 0) return 0;
   const suma = letras.reduce((acc, l) => acc + (puntajes[l] ?? 0), 0);

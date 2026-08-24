@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CONFIANZA_PLENA,
   LETRAS_EVALUABLES,
+  LETRAS_PUNTUABLES,
+  LETRAS_SIN_PUNTAJE,
   UMBRAL_POR_DEFECTO,
   VENTANA_RETENCION,
   nota,
@@ -34,9 +37,21 @@ describe('puntajeLetra', () => {
   });
 
   it('pondera la estabilidad por encima de la confianza', () => {
+    // La confianza se elige a MITAD de camino entre el umbral y el techo: por
+    // encima del techo la componente ya vale el maximo y la comparacion no
+    // probaria nada.
+    const aMedias = UMBRAL_POR_DEFECTO + (CONFIANZA_PLENA - UMBRAL_POR_DEFECTO) / 2;
     const menosEstable = puntajeLetra({ ...base, estabilidad: 0.5 });
-    const menosConfiado = puntajeLetra({ ...base, confianzaMedia: 0.75 });
+    const menosConfiado = puntajeLetra({ ...base, confianzaMedia: aMedias });
     expect(menosEstable).toBeLessThan(menosConfiado);
+  });
+
+  it('da la confianza por completa al llegar al techo', () => {
+    // Lo que hace alcanzable el 7,0: no hay que sacarle al modelo una certeza
+    // que no da. En el techo y por encima, la componente vale lo mismo.
+    const enElTecho = puntajeLetra({ ...base, confianzaMedia: CONFIANZA_PLENA });
+    expect(enElTecho).toBeCloseTo(100, 5);
+    expect(puntajeLetra({ ...base, confianzaMedia: 0.9 })).toBeCloseTo(enElTecho, 5);
   });
 
   it('penaliza poco la lentitud', () => {
@@ -76,12 +91,23 @@ describe('promedioSesion', () => {
     // cambia que letras son evaluables.
     const n = 7;
     const algunas = Object.fromEntries(
-      LETRAS_EVALUABLES.slice(0, n).map((l) => [l, 100]),
+      LETRAS_PUNTUABLES.slice(0, n).map((l) => [l, 100]),
     );
     expect(promedioSesion(algunas)).toBeCloseTo(
-      (n / LETRAS_EVALUABLES.length) * 100,
+      (n / LETRAS_PUNTUABLES.length) * 100,
       5,
     );
+  });
+
+  it('ignora las letras que no puntuan', () => {
+    // Fallar la P no puede bajar la nota, y lograrla no puede subirla: no esta
+    // ni en el numerador ni en el divisor.
+    const puntuables = Object.fromEntries(LETRAS_PUNTUABLES.map((l) => [l, 100]));
+    expect(promedioSesion(puntuables)).toBeCloseTo(100, 5);
+
+    const conCero = { ...puntuables };
+    LETRAS_SIN_PUNTAJE.forEach((l) => { conCero[l] = 0; });
+    expect(promedioSesion(conCero)).toBeCloseTo(100, 5);
   });
 
   it('da 100 solo si se lograron todas', () => {

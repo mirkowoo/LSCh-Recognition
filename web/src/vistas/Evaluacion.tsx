@@ -1,11 +1,15 @@
 /**
  * Recorrido evaluado del abecedario.
  *
- * Recorre las 24 letras estaticas. J y Z quedan deshabilitadas: llevan
- * movimiento y un detector de imagenes fijas no puede juzgarlas. Aparecen
- * atenuadas en la fila de progreso para que el abecedario se vea completo.
+ * Recorre las 21 letras estaticas — LETRAS_EVALUABLES en puntaje.ts. Las cinco
+ * con movimiento (G, J, S, X, Z) quedan fuera: llevan desplazamiento y un
+ * detector de imagenes fijas no puede juzgarlas. Aparecen atenuadas en la fila
+ * de progreso para que el abecedario se vea completo.
  *
- * Al terminar guarda la sesion y los 24 intentos en Praxsuite, y pide el
+ * Hay una tercera categoria: las de LETRAS_SIN_PUNTAJE se practican pero no
+ * entran en la nota, porque el modelo no las mide bien. Hoy es la P.
+ *
+ * Al terminar guarda la sesion y los 21 intentos en Praxsuite, y pide el
  * recalculo del ranking. Se guardan los cuatro insumos crudos ADEMAS del puntaje
  * derivado, para poder recalcular la formula sobre el historico sin volver a
  * pedirle a nadie que repita la evaluacion.
@@ -17,6 +21,8 @@ import {
   ABECEDARIO,
   LETRAS_DINAMICAS,
   LETRAS_EVALUABLES,
+  LETRAS_PUNTUABLES,
+  LETRAS_SIN_PUNTAJE,
   nota,
   promedioSesion,
 } from '../puntaje';
@@ -56,7 +62,15 @@ export function Evaluacion() {
 
   const promedio = promedioSesion(puntajes);
   const laNota = nota(promedio);
+  // Dos conteos distintos, a proposito:
+  //   `logradas`   -> lo que hiciste, sobre las 21 que se recorren. Es lo que
+  //                   se muestra en pantalla, porque describe la practica.
+  //   `puntuadas`  -> lo que CUENTA, sobre las que entran en la nota. Es lo que
+  //                   se guarda, porque la fila de sesion es el registro
+  //                   calificado: su nota, su promedio y sus conteos tienen que
+  //                   referirse todos al mismo conjunto.
   const logradas = LETRAS_EVALUABLES.filter((l) => resultados[l]?.logrado).length;
+  const puntuadas = LETRAS_PUNTUABLES.filter((l) => resultados[l]?.logrado).length;
 
   useEffect(() => {
     if (!terminada || guardado !== 'pendiente') return;
@@ -72,8 +86,8 @@ export function Evaluacion() {
         sesionId: sesionIdRef.current,
         inicio: inicioRef.current,
         fin: new Date(),
-        letrasEvaluadas: LETRAS_EVALUABLES.length,
-        letrasLogradas: logradas,
+        letrasEvaluadas: LETRAS_PUNTUABLES.length,
+        letrasLogradas: puntuadas,
         puntajePromedio: promedio,
         nota: laNota,
         completa: true,
@@ -89,7 +103,7 @@ export function Evaluacion() {
         setGuardado('error');
         setErrorGuardado(e instanceof Error ? e.message : String(e));
       });
-  }, [terminada, guardado, resultados, logradas, promedio, laNota]);
+  }, [terminada, guardado, resultados, puntuadas, promedio, laNota]);
 
   const reiniciar = () => {
     setResultados({});
@@ -117,10 +131,6 @@ export function Evaluacion() {
             {logradas} de {LETRAS_EVALUABLES.length} letras logradas
             <br />
             puntaje promedio {promedio.toFixed(1)} / 100
-            <br />
-            <span className="tenue">
-              escala 1,0–7,0 con exigencia al 60%. J y Z no entran en la nota.
-            </span>
           </div>
         </div>
 
@@ -135,7 +145,25 @@ export function Evaluacion() {
             </span>
           )}
           {guardado === 'error' && (
-            <div className="error">No se pudo guardar: {errorGuardado}</div>
+            <div className="error">
+              No se pudo guardar: {errorGuardado}
+              {/* La causa mas comun es el token vencido. Si ya se reconectaron
+                  desde el aviso de la cabecera, el resultado sigue en memoria y
+                  se puede subir: volver a 'pendiente' relanza el efecto que
+                  guarda. Sin esto, reconectarse no servia de nada — la
+                  evaluacion ya estaba perdida. */}
+              {haySesion() && (
+                <button
+                  className="reintentar"
+                  onClick={() => {
+                    setErrorGuardado(null);
+                    setGuardado('pendiente');
+                  }}
+                >
+                  Reintentar
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -152,12 +180,14 @@ export function Evaluacion() {
           </thead>
           <tbody>
             {ordenadas.slice(0, 8).map(({ letra: l, r }) => (
+              // data-rotulo lo usa el CSS para poner el nombre de cada columna
+              // delante del dato cuando la tabla se apila en el telefono.
               <tr key={l}>
                 <td>{l}</td>
-                <td>{(r?.puntaje ?? 0).toFixed(1)}</td>
-                <td>{((r?.estabilidad ?? 0) * 100).toFixed(0)}%</td>
-                <td>{(r?.confianzaMedia ?? 0).toFixed(2)}</td>
-                <td>{(r?.segundosHastaLogro ?? 0).toFixed(1)}</td>
+                <td data-rotulo="Puntaje">{(r?.puntaje ?? 0).toFixed(1)}</td>
+                <td data-rotulo="Estabilidad">{((r?.estabilidad ?? 0) * 100).toFixed(0)}%</td>
+                <td data-rotulo="Confianza">{(r?.confianzaMedia ?? 0).toFixed(2)}</td>
+                <td data-rotulo="Segundos">{(r?.segundosHastaLogro ?? 0).toFixed(1)}</td>
               </tr>
             ))}
           </tbody>
@@ -203,7 +233,16 @@ export function Evaluacion() {
           entre letra y letra. El reset lo hace Practica al cambiar la prop. */}
       <Practica
         letra={letra}
-        contexto={`Letra ${indice + 1} de ${LETRAS_EVALUABLES.length}`}
+        // Se avisa AQUI y no en un pie de pagina: es el momento en que la
+        // persona esta haciendo esa letra y la unica vez que le importa.
+        contexto={
+          `Letra ${indice + 1} de ${LETRAS_EVALUABLES.length}` +
+          (LETRAS_SIN_PUNTAJE.includes(
+            letra as (typeof LETRAS_SIN_PUNTAJE)[number],
+          )
+            ? ' · esta letra no puntúa'
+            : '')
+        }
         onCompletada={avanzar}
         onSaltar={avanzar}
       />

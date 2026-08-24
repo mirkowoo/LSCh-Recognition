@@ -3,11 +3,17 @@
  *
  * REPARTO DE RESPONSABILIDADES — y por que es asi:
  *
- *   Sesiones e Intentos  -> los escribe el cliente directo con su JWT.
- *                           El gateway estampa la columna `Usuario` desde el
- *                           claim `sub` del token y RECHAZA cualquier intento
- *                           del cliente de fijarla. Por eso nadie puede escribir
- *                           a nombre de otro, aunque manipule el cuerpo.
+ *   Sesiones e Intentos  -> los escribe una Automation detras de un Endpoint
+ *                           sync. Valida el JWT y estampa la identidad ella
+ *                           misma, asi que el cuerpo no decide de quien es la
+ *                           sesion.
+ *
+ *                           Antes los escribia el cliente directo, confiando en
+ *                           que el gateway estampara `Usuario` desde el claim
+ *                           `sub`. Ese camino NO funciona: `Usuario` es de tipo
+ *                           Enduser (uuid[] en la base) y la plantilla del
+ *                           gateway lo inserta como texto. Ver
+ *                           CONFIG.guardarSesionUrl.
  *
  *   Ranking              -> NO lo escribe el cliente. Lo recalcula una Automation
  *                           detras de un Endpoint sync, leyendo las sesiones
@@ -20,7 +26,7 @@
  * Lo que si queda garantizado es la identidad: nadie puntua a nombre de otro.
  */
 import { CONFIG } from './config';
-import { consultar, insertar, llamarEndpoint } from './api';
+import { consultar, llamarEndpoint } from './api';
 import { obtenerSesion, obtenerToken } from './auth';
 import type { ResultadoLetra } from '../vistas/Practica';
 
@@ -81,47 +87,40 @@ export async function guardarSesion(
   const token = obtenerToken();
   if (!token) return null;
 
-  await insertar(
-    CONFIG.tablas.sesiones,
-    [
-      {
-        SesionId: resumen.sesionId,
-        Inicio: resumen.inicio.toISOString(),
-        Fin: resumen.fin.toISOString(),
-        LetrasEvaluadas: resumen.letrasEvaluadas,
-        LetrasLogradas: resumen.letrasLogradas,
-        PuntajePromedio: Number(resumen.puntajePromedio.toFixed(2)),
-        Nota: Number(resumen.nota.toFixed(1)),
-        Completa: resumen.completa,
-        ModeloVersion: CONFIG.modeloVersion,
-        // `Usuario` no se manda: lo estampa el gateway desde el token.
-      },
-    ],
+  // UNA sola llamada: la sesion y los 21 intentos van juntos al endpoint, que
+  // los escribe con la identidad verificada. Ver CONFIG.guardarSesionUrl para
+  // por que ya no se escribe directo contra las tablas.
+  //
+  // El `Usuario` no viaja en el cuerpo — lo estampa el script de la automation
+  // desde el token. Mandarlo no serviria de nada: se descarta.
+  await llamarEndpoint(CONFIG.guardarSesionUrl, {
     token,
-  );
-
-  if (intentos.length) {
-    await insertar(
-      CONFIG.tablas.intentos,
-      intentos.map((i, n) => ({
-        IntentoId: `${resumen.sesionId}-${String(n).padStart(2, '0')}-${i.letra}`,
-        SesionId: resumen.sesionId,
-        Letra: i.letra,
-        Logrado: i.logrado,
-        // Senales crudas: se guardan aparte del puntaje derivado para poder
-        // recalcular la formula sobre el historico sin volver a pedir datos.
-        ConfianzaMedia: Number(i.confianzaMedia.toFixed(4)),
-        Estabilidad: Number(i.estabilidad.toFixed(4)),
-        SegundosHastaLogro: Number(i.segundosHastaLogro.toFixed(2)),
-        Umbral: i.umbral,
-        Puntaje: Number(i.puntaje.toFixed(2)),
-        FpsMedio: Number(fpsMedio.toFixed(1)),
-        Dispositivo: dispositivo(),
-        FechaHora: new Date().toISOString(),
-      })),
-      token,
-    );
-  }
+    modeloVersion: CONFIG.modeloVersion,
+    sesion: {
+      sesionId: resumen.sesionId,
+      inicio: resumen.inicio.toISOString(),
+      fin: resumen.fin.toISOString(),
+      letrasEvaluadas: resumen.letrasEvaluadas,
+      letrasLogradas: resumen.letrasLogradas,
+      puntajePromedio: Number(resumen.puntajePromedio.toFixed(2)),
+      nota: Number(resumen.nota.toFixed(1)),
+      completa: resumen.completa,
+    },
+    intentos: intentos.map((i) => ({
+      letra: i.letra,
+      logrado: i.logrado,
+      // Senales crudas: se guardan aparte del puntaje derivado para poder
+      // recalcular la formula sobre el historico sin volver a pedir datos.
+      confianzaMedia: Number(i.confianzaMedia.toFixed(4)),
+      estabilidad: Number(i.estabilidad.toFixed(4)),
+      segundosHastaLogro: Number(i.segundosHastaLogro.toFixed(2)),
+      umbral: i.umbral,
+      puntaje: Number(i.puntaje.toFixed(2)),
+      fpsMedio: Number(fpsMedio.toFixed(1)),
+      dispositivo: dispositivo(),
+      fechaHora: new Date().toISOString(),
+    })),
+  });
 
   // Solo una sesion completa mueve el ranking.
   if (!resumen.completa) return { publicado: false };
